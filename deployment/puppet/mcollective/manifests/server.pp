@@ -37,7 +37,7 @@ class mcollective::server(
         # mcollective-common
         # rubygems
         # rubygem-stomp
-        '1.8.7': {
+        default: {
           $mcollective_package = "mcollective"
         }
       }
