@@ -93,13 +93,19 @@ class cobbler::snippets {
       }
     }
     /(?i)(centos|redhat)/:  {
-      file { "/usr/lib/python2.6/site-packages/cobbler/late_command.py" :
+      if $::operatingsystemmajrelease >= 7 {
+        $python_sitelib = '/usr/lib/python2.7/site-packages'
+      } else {
+        $python_sitelib = '/usr/lib/python2.6/site-packages'
+      }
+
+      file { "${python_sitelib}/cobbler/late_command.py" :
         content => template("cobbler/scripts/late_command.py"),
         owner => root,
         group => root,
         mode => 0644,
       }
-      file { "/usr/lib/python2.6/site-packages/cobbler/pmanager.py" :
+      file { "${python_sitelib}/cobbler/pmanager.py" :
         content => template("cobbler/scripts/pmanager.py"),
         owner => root,
         group => root,

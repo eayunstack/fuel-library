@@ -36,3 +36,5 @@ pxe-service=net:#gpxe,x86PC,"Install",pxelinux,<%= @next_server %>
 dhcp-boot=net:internal,pxelinux.0,boothost,<%= @next_server %>
 
 $insert_cobbler_system_definitions
+
+user=root
