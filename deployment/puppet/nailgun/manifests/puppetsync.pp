@@ -32,10 +32,21 @@ class nailgun::puppetsync(
      }
   }
   if ! defined(Service['xinetd']) {
-    service { 'xinetd':
-      ensure => running,
-      enable => true,
-      require => Package['xinetd'],
+    if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+      service { 'xinetd':
+        ensure => running,
+        hasstatus  => false,
+        start      => '/usr/sbin/xinetd -stayalive',
+        binary     => '/usr/sbin/xinetd',
+        provider   => 'base',
+        require => Package['xinetd'],
+      }
+    } else {
+      service { 'xinetd':
+        ensure => running,
+        enable => true,
+        require => Package['xinetd'],
+      }
     }
   }
 
