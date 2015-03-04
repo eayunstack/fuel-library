@@ -39,20 +39,31 @@ class rabbitmq::service(
  on package rabbitmq-server update": }
   }
 
-  if ($service_provider) {
+  if $::is_virtual == 'true' and $::virtual =~ /docker/ {
     service { $service_name:
       ensure     => $ensure_real,
-      enable     => $enable_real,
-      hasstatus  => true,
-      hasrestart => true,
-      provider   => $service_provider,
+      enable     => false,
+      start      => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmq-server -detached; sleep 30"',
+      stop       => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmqctl stop"',
+      status     => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmqctl status"',
+      provider   => 'base',
     }
   } else {
-    service { $service_name:
-      ensure     => $ensure_real,
-      enable     => $enable_real,
-      hasstatus  => true,
-      hasrestart => true,
+    if ($service_provider) {
+      service { $service_name:
+        ensure     => $ensure_real,
+        enable     => $enable_real,
+        hasstatus  => true,
+        hasrestart => true,
+        provider   => $service_provider,
+      }
+    } else {
+      service { $service_name:
+        ensure     => $ensure_real,
+        enable     => $enable_real,
+        hasstatus  => true,
+        hasrestart => true,
+      }
     }
   }
 
