@@ -86,9 +86,19 @@ case $production {
       ensure => latest,
     }
 
-    service { 'crond':
-      ensure => running,
-      enable => true,
+    if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+      service { 'crond':
+        ensure    => running,
+        hasstatus => false,
+        start     => 'if [ -e /etc/sysconfig/crond ]; then source /etc/sysconfig/crond; fi; /usr/sbin/crond $CRONDARGS',
+        binary    => '/usr/sbin/crond',
+        provider  => 'base',
+      }
+    } else {
+      service { 'crond':
+        ensure => running,
+        enable => true,
+      }
     }
 
     # Flush expired tokens
