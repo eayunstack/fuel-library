@@ -102,6 +102,8 @@ $SNIPPET('pre_install_partition_lvm')
 # CONFIGURE ANACONDA YUM SETTINGS
 $SNIPPET('anaconda-yum')
 
+%end
+
 # PACKAGES SECTION
 # HERE ARE LIST OF PACKAGES THAT WILL BE INSTALLED
 # FIXME --ignoremissing
@@ -159,6 +161,8 @@ $SNIPPET('puppet_install_if_enabled')
 # COBBLER EMBEDDED SNIPPET: 'mcollective_install_if_enabled'
 # LISTS mcollective PACKAGE IF mco_auto_setup VARIABLE IS SET TO 1
 $SNIPPET('mcollective_install_if_enabled')
+
+%end
 
 # POST INSTALLATION PARTITIONING
 # THERE ARE SOME COMMANDS TO CREATE LARGE (>1TB) VOLUMES
