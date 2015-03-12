@@ -4,9 +4,11 @@ DEFAULT_GW=$gw
 #raw
 ADMIN_MAC=$(sed 's/\ /\n/g' /proc/cmdline | grep choose_interface | awk -F\= '{print $2}')
 ADMIN_IF=$(tr ' ' '\n' < /proc/cmdline | grep "udevrules=" | sed 's/[,=]/\n/g' | grep "$ADMIN_MAC" | cut -d_ -f2 | head -1)
-INSTALL_IF=$(ifconfig | grep "$ADMIN_MAC" | head -1 | cut -d' ' -f1)
-NETADDR=( $(ifconfig $INSTALL_IF | grep -oP "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}") )
-echo -e "# FROM COBBLER SNIPPET\nDEVICE=$ADMIN_IF\nIPADDR=${NETADDR[0]}\nNETMASK=${NETADDR[2]}\nBOOTPROTO=none\nONBOOT=yes\nUSERCTL=no\n" > /etc/sysconfig/network-scripts/ifcfg-"$ADMIN_IF"
+INSTALL_IF=$(for i in /sys/class/net/*; do if [ -f $i/address -a $(head -n 1 $i/address) = "$ADMIN_MAC" ]; then basename $i; break; fi; done)
+NETADDR=$(ip -4 addr show dev $INSTALL_IF|grep -o '[^ ]\+/[0-9]\+')
+IPADDR=${NETADDR%/*}
+NETMASK=$(ipcalc -m $NETADDR)
+echo -e "# FROM COBBLER SNIPPET\nDEVICE=$ADMIN_IF\nIPADDR=$IPADDR\n$NETMASK\nBOOTPROTO=none\nONBOOT=yes\nUSERCTL=no\n" > /etc/sysconfig/network-scripts/ifcfg-"$ADMIN_IF"
 
 echo GATEWAY="$DEFAULT_GW" >> /etc/sysconfig/network
 
