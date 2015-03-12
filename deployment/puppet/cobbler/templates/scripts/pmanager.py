@@ -70,6 +70,7 @@ class PManager(object):
         if disk["extra"]:
             command += " || "
         command += "ls /dev/{0}".format(disk["id"])
+        command += " || ls /dev/{0}".format(disk["name"])
         command += ") 2>/dev/null) )"
         return command
 
