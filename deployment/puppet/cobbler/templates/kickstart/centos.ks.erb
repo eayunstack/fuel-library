@@ -29,6 +29,7 @@ timezone --utc <%= @ks_system_timezone %>
 reboot
 
 firewall --disable
+services --disabled=NetworkManager
 zerombr
 
 # SET ROOT PASSWORD DEFAULT IS r00tme
