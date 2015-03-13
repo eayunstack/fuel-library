@@ -166,7 +166,7 @@ class neutron::server (
   $database_max_retries    = 10,
   $database_idle_timeout   = 3600,
   $database_retry_interval = 10,
-  $sync_db                 = false,
+  $sync_db                 = true,
   $api_workers             = $::processorcount,
   $rpc_workers             = $::processorcount,
   $agent_down_time         = '75',
