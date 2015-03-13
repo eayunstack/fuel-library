@@ -223,6 +223,12 @@ class galera (
     provider => 'pacemaker',
   }
 
+  Package['MySQL-server'] ->
+  exec { "create-mysql-table-if-missing":
+    command => "/usr/bin/mysql_install_db --datadir=$galera::params::datadir --user=mysql && chown -R mysql:mysql $galera::params::datadir",
+    path => "/usr/bin:/usr/sbin",
+    creates     => "$galera::params::datadir/mysql",
+  } ->
   Service['mysql'] -> Anchor['galera-done']
 
   if $::galera_gcomm_empty == 'true' {
