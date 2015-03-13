@@ -231,22 +231,20 @@ class galera (
   } ->
   Service['mysql'] -> Anchor['galera-done']
 
-  if $::galera_gcomm_empty == 'true' {
-    #FIXME(bogdando): dirtyhack to pervert imperative puppet nature.
-    if $::mysql_log_file_size_real != $mysql_log_file_size {
-      # delete MySQL ib_logfiles, if log file size does not match the one
-      # from params
-      exec { 'delete_logfiles':
-        command => "rm -f ${datadir}/ib_logfile* || true",
-        path    => [ '/sbin/', '/usr/sbin/', '/usr/bin/' ,'/bin/' ],
-        before  => File['/etc/mysql/conf.d/wsrep.cnf'],
-      }
-      # use predefined value for log file size
-      $innodb_log_file_size_real = $mysql_log_file_size
-    } else {
-      # evaluate existing log file size and use it as a value
-      $innodb_log_file_size_real = $::mysql_log_file_size_real
+  #FIXME(bogdando): dirtyhack to pervert imperative puppet nature.
+  if $::galera_gcomm_empty == 'true' and $::mysql_log_file_size_real != $mysql_log_file_size {
+    # delete MySQL ib_logfiles, if log file size does not match the one
+    # from params
+    exec { 'delete_logfiles':
+      command => "rm -f ${datadir}/ib_logfile* || true",
+      path    => [ '/sbin/', '/usr/sbin/', '/usr/bin/' ,'/bin/' ],
+      before  => File['/etc/mysql/conf.d/wsrep.cnf'],
     }
+    # use predefined value for log file size
+    $innodb_log_file_size_real = $mysql_log_file_size
+  } else {
+    # evaluate existing log file size and use it as a value
+    $innodb_log_file_size_real = $::mysql_log_file_size_real
   }
   file { '/etc/mysql/conf.d/wsrep.cnf':
     ensure  => present,
