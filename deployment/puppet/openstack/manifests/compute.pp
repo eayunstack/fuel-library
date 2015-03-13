@@ -360,8 +360,10 @@ class openstack::compute (
   }
 
   if $::operatingsystem == 'Centos' {
-    package { 'cpufreq-init':
-      ensure => present;
+    if $::operatingsystemmajrelease < 7 {
+      package { 'cpufreq-init':
+        ensure => present;
+      }
     }
   }
 
