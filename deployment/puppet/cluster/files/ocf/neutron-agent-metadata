@@ -251,7 +251,7 @@ neutron_metadata_agent_start() {
     # Don't use ocf_run as we're sending the tool's output to /dev/null
     su ${OCF_RESKEY_user} -s /bin/sh -c "${OCF_RESKEY_binary} --config-file=$OCF_RESKEY_config \
         --config-file=$OCF_RESKEY_agent_config --log-file=$OCF_RESKEY_log_file $OCF_RESKEY_additional_parameters \
-        >> /dev/null"' 2>&1 & echo \$! > $OCF_RESKEY_pid'
+        >> /dev/null 2>&1 & echo \$! > $OCF_RESKEY_pid"
     ocf_log debug "Create pid file: ${OCF_RESKEY_pid} with content $(cat ${OCF_RESKEY_pid})"
 
     # Spin waiting for the server to come up.
