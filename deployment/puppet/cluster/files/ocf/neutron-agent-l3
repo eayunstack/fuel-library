@@ -32,7 +32,7 @@
 
 # Fill in some defaults if no values are specified
 
-PATH=/sbin:/usr/sbin:/bin:/usr/bin
+PATH=/usr/sbin:/usr/bin
 
 OCF_RESKEY_binary_default="neutron-l3-agent"
 OCF_RESKEY_config_default="/etc/neutron/neutron.conf"

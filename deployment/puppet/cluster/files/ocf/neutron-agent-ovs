@@ -32,6 +32,8 @@
 
 # Fill in some defaults if no values are specified
 
+PATH=/usr/sbin:/usr/bin
+
 OCF_RESKEY_binary_default="neutron-openvswitch-agent"
 OCF_RESKEY_config_default="/etc/neutron/neutron.conf"
 OCF_RESKEY_plugin_config_default="/etc/neutron/plugin.ini"
