@@ -37,8 +37,8 @@ class galera::params {
   case $::osfamily {
     'RedHat': {
       $libaio_package       = 'libaio'
-      $mysql_server_name    = 'MySQL-server-wsrep'
-      $mysql_client_name    = 'MySQL-client-wsrep'
+      $mysql_server_name    = 'mariadb-galera-server'
+      $mysql_client_name    = 'mariadb'
       $libgalera_prefix     = '/usr/lib64'
     }
     'Debian': {
