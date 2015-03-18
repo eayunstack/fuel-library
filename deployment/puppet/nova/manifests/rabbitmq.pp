@@ -122,8 +122,6 @@ class nova::rabbitmq(
       }
 
       File<| title == 'ocf-mirantis-path' |> -> File['rabbitmq-ocf']
-      Package['pacemaker'] -> File<| title == 'ocf-mirantis-path' |>
-      Package['pacemaker'] -> File['rabbitmq-ocf']
       Package['rabbitmq-server'] ->
         File['rabbitmq-ocf'] ->
           Service["$service_name"]
