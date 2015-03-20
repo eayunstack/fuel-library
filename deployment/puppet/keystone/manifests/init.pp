@@ -409,13 +409,24 @@ class keystone(
     $service_ensure = 'stopped'
   }
 
-  service { 'keystone':
-    ensure     => $service_ensure,
-    name       => $::keystone::params::service_name,
-    enable     => $enabled,
-    hasstatus  => true,
-    hasrestart => true,
-    provider   => $::keystone::params::service_provider,
+  if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+    service { 'keystone':
+      ensure     => $service_ensure,
+      hasstatus  => false,
+      hasrestart => false,
+      start      => '/usr/bin/keystone-all &',
+      pattern    => '/usr/bin/keystone-all',
+      provider   => 'base',
+    }
+  } else {
+    service { 'keystone':
+      ensure     => $service_ensure,
+      name       => $::keystone::params::service_name,
+      enable     => $enabled,
+      hasstatus  => true,
+      hasrestart => true,
+      provider   => $::keystone::params::service_provider,
+    }
   }
 
   if $enabled {
