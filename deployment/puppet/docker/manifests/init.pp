@@ -1,7 +1,6 @@
 class docker (
 $admin_ipaddress = $::fuel_settings['ADMIN_NETWORK']['ipaddress'],
 $limit = "102400",
-$docker_package = "docker-io",
 $docker_service = "docker",
 $dependent_dirs = ["/var/log/docker-logs", "/var/log/docker-logs/remote",
   "/var/log/docker-logs/audit", "/var/log/docker-logs/cobbler",
@@ -14,8 +13,20 @@ $dependent_dirs = ["/var/log/docker-logs", "/var/log/docker-logs/remote",
   ]
 ) {
 
+  if $::operatingsystemmajrelease >= 7 {
+    $docker_package = "docker"
+  } else {
+    $docker_package = "docker-io"
+  }
+
   package {$docker_package:
     ensure => installed,
+  }
+
+  if $::operatingsystemmajrelease >= 7 {
+    package {'lxc':
+      ensure => installed,
+    }
   }
 
   service {$docker_service:
