@@ -171,7 +171,7 @@ class PManager(object):
         self.pre("parted -a optimal -s {0} "
                  "unit {3} mkpart primary {1} {2}".format(
                      self._disk_dev(disk),
-                     self.psize(disk["id"]),
+                     self.psize(disk["id"]) + 1,
                      self.psize(disk["id"], 24 * self.factor),
                      self.unit
             )
