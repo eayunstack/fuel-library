@@ -1,3 +1,26 @@
+<% if @corosync_version == '2' %>
+compatibility: whitetank
+
+quorum {
+  provider: corosync_votequorum
+   <% if @unicast_addresses.length  == 2 %>
+     two_node: 1
+   <% else %>
+     two_node: 0
+   <% end %>
+}
+
+nodelist {
+  <% id = 0 %>
+  <% @unicast_addresses.each do |node| %>
+  node {
+    ring0_addr: <%= node %>
+    nodeid: <%= id+=1 %>
+  }
+  <% end %>
+}
+<% end %>
+
 totem {
   version:                             2
   token:                               3000
@@ -7,15 +30,24 @@ totem {
   vsftype:                             none
   max_messages:                        20
   clear_node_high_bit:                 yes
-  rrp_mode:                            none
-  secauth:                             <%= @enable_secauth %>
-  threads:                             <%= @threads %>
+  rrp_mode:                            <%= @rrp_mode %>
+  secauth:                             <%= @enable_secauth_real %>
+  threads:                             <%= @threads_real %>
+<% [@bind_address_real].flatten.each_index do |i| -%>
   interface {
-    ringnumber:   0
-    bindnetaddr:  <%= @bind_address %>
-    mcastaddr:    <%= @multicast_address %>
-    mcastport:    <%= @port %>
+    ringnumber:  <%= i %>
+    bindnetaddr: <%= [@bind_address_real].flatten[i] %>
+<% if [@multicast_address_real].flatten[i] == 'broadcast' -%>
+    broadcast:   yes
+<% else -%>
+    mcastaddr:   <%= [@multicast_address_real].flatten[i] %>
+    mcastport:   <%= [@port_real].flatten[i] %>
+<% end -%>
+<% if @ttl -%>
+    ttl:         <%= @ttl %>
+<% end -%>
   }
+<% end -%>
 }
 
 logging {
@@ -26,9 +58,7 @@ logging {
   to_syslog:       yes
   syslog_facility: daemon
   syslog_priority: info
-# We don't really want corosync debugs, it is TOO verbose
-#  debug:           <%= scope.lookupvar('debug') ? 'on' : 'off' %>
-  debug:           off
+  debug:           <%= scope.lookupvar('debug') ? 'on' : 'off' %>
   function_name:   on
   timestamp:       on
   logger_subsys {

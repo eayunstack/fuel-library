@@ -1,2 +1,4 @@
-metadata.json
-.externalToolBuilders
+Gemfile.lock
+spec/fixtures
+.bundle
+pkg

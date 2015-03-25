@@ -57,8 +57,8 @@ class osnailyfacter::cluster_ha {
     $cinder_nodes_array = []
   }
 
-  # All hash assignment from a dimensional hash must be in the local scope or they will
-  #  be undefined (don't move to site.pp)
+  # All hash assignment from a dimensional hash must be in the local scope or
+  # they will be undefined (don't move to site.pp)
 
   #These aren't always present.
   if !$::fuel_settings['sahara'] {
@@ -452,7 +452,7 @@ class osnailyfacter::cluster_ha {
     # deploymenet. This wouldls only need to be changed by hand.
     $keep_vips_together = false
     if ($keep_vips_together) {
-      cs_colocation { 'ha_vips':
+      cs_rsc_colocation { 'ha_vips':
         ensure      => present,
         primitives  => [prefix(keys($::osnailyfacter::cluster_ha::vips),"vip__")],
         after       => Cluster::Virtual_ips[$::osnailyfacter::cluster_ha::vip_keys]
@@ -481,7 +481,7 @@ class osnailyfacter::cluster_ha {
       class { '::cluster':
         stage             => 'corosync_setup',
         internal_address  => $::internal_address,
-        unicast_addresses => $::osnailyfacter::cluster_ha::controller_internal_addresses,
+        unicast_addresses => $::osnailyfacter::cluster_ha::controller_nodes,
       }
 
       Class['::cluster']->

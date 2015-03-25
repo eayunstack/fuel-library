@@ -10,8 +10,13 @@
 # [*enable_secauth*]
 #   Controls corosync's ability to authenticate and encrypt multicast messages.
 #
+# [*authkey_source*]
+#   Allows to use either a file or a string as a authkey.
+#   Defaults to 'file'. Can be set to 'string'.
+#
 # [*authkey*]
-#   Specifies the path to the CA which is used to sign Corosync's certificate.
+#   Specifies the path to the CA which is used to sign Corosync's certificate if
+#   authkey_source is 'file' or the actual authkey if 'string' is used instead.
 #
 # [*threads*]
 #   How many threads you are going to let corosync use to encode and decode
@@ -20,14 +25,18 @@
 #
 # [*bind_address*]
 #   The ip address we are going to bind the corosync daemon too.
+#   Can be specified as an array to have multiple rings (multicast only).
 #
 # [*port*]
-#   The udp port that corosync will use to do its multcast communication.  Be
+#   The udp port that corosync will use to do its multicast communication.  Be
 #   aware that corosync used this defined port plus minus one.
+#   Can be specified as an array to have multiple rings (multicast only).
 #
 # [*multicast_address*]
 #   An IP address that has been reserved for multicast traffic.  This is the
 #   default way that Corosync accomplishes communication across the cluster.
+#   Use 'broadcast' to have broadcast instead
+#   Can be specified as an array to have multiple rings (multicast only).
 #
 # [*unicast_addresses*]
 #   An array of IP addresses that make up the cluster's members.  These are
@@ -47,6 +56,15 @@
 #   True/false parameter specifying whether Corosync should produce debug
 #   output in its logs.
 #
+# [*rrp_mode*]
+#   Mode of redundant ring. May be none, active, or passive.
+#
+# [*ttl*]
+#   Time To Live (multicast only).
+#
+# [*packages*]
+#   Define the list of software packages which should be installed.
+#
 # === Examples
 #
 #  class { 'corosync':
@@ -63,82 +81,116 @@
 #
 # Copyright 2012, Puppet Labs, LLC.
 #
-class corosync (
-  $enable_secauth    = 'off',
-  $authkey           = '/etc/puppet/ssl/certs/ca.pem',
-  $threads           = 0,
-  $port              = 5405,
-  $bind_address      = $::ipaddress_eth0,
-  $multicast_address = "239.1.1.2",
-  $unicast_addresses = undef,
-  $force_online      = false,
-  $check_standby     = false,
-  $debug             = false,
-) {
+class corosync(
+  $enable_secauth    = $::corosync::params::enable_secauth,
+  $authkey_source    = $::corosync::params::authkey_source,
+  $authkey           = $::corosync::params::authkey,
+  $threads           = $::corosync::params::threads,
+  $port              = $::corosync::params::port,
+  $bind_address      = $::corosync::params::bind_address,
+  $multicast_address = $::corosync::params::multicast_address,
+  $unicast_addresses = $::corosync::params::unicast_addresses,
+  $force_online      = $::corosync::params::force_online,
+  $check_standby     = $::corosync::params::check_standby,
+  $debug             = $::corosync::params::debug,
+  $rrp_mode          = $::corosync::params::rrp_mode,
+  $ttl               = $::corosync::params::ttl,
+  $packages          = $::corosync::params::packages,
+  $corosync_version  = $::corosync::params::corosync_version,
+) inherits ::corosync::params {
 
-  # Making it possible to provide data with parameterized class declarations or
-  # Console.
+  if ! is_bool($enable_secauth) {
+    validate_re($enable_secauth, '^(on|off)$')
+  }
+  validate_re($authkey_source, '^(file|string)$')
+  validate_bool($force_online)
+  validate_bool($check_standby)
+  validate_bool($debug)
 
-  if $unicast_addresses == undef {
+  $threads_real = $threads ? {
+    'UNSET' => $::threads ? {
+      undef   => $::processorcount,
+      default => $::threads,
+    },
+    default => $threads,
+  }
+
+  $port_real = $port ? {
+    'UNSET' => $::port ? {
+      undef   => '5405',
+      default => $::port,
+    },
+    default => $port,
+  }
+
+  $bind_address_real = $bind_address ? {
+    'UNSET' => $::bind_address ? {
+      undef   => $::ipaddress,
+      default => $::bind_address,
+    },
+    default => $bind_address,
+  }
+
+  if $unicast_addresses == 'UNSET' {
     $corosync_conf = "${module_name}/corosync.conf.erb"
   } else {
     $corosync_conf = "${module_name}/corosync.conf.udpu.erb"
   }
 
-  # We use an if here instead of a selector since we need to fail the catalog if
-  # this value is provided.  This is emulating a required variable as defined in
-  # parameterized class.
-
-  file { 'limitsconf':
-    ensure  => present,
-    path    => '/etc/security/limits.conf',
-    source => 'puppet:///modules/corosync/limits.conf',
-    replace => true,
-    owner   => '0',
-    group   => '0',
-    mode    => '0644',
-    before => Service["corosync"],
+  # $multicast_address is NOT required if $unicast_address is provided
+  if $multicast_address == 'UNSET' and $unicast_addresses == 'UNSET' {
+      fail('You must provide a value for multicast_address')
   }
 
+  case $enable_secauth {
+    true:    { $enable_secauth_real = 'on' }
+    false:   { $enable_secauth_real = 'off' }
+    default: { $enable_secauth_real = $enable_secauth }
+  }
 
   # Using the Puppet infrastructure's ca as the authkey, this means any node in
   # Puppet can join the cluster.  Totally not ideal, going to come up with
   # something better.
-  if $enable_secauth == 'on' {
-    file { '/etc/corosync/authkey':
-      ensure => file,
-      source => $authkey,
-      mode   => '0400',
-      owner  => 'root',
-      group  => 'root',
-      notify => Service['corosync'],
+  if $enable_secauth_real == 'on' {
+    case $authkey_source {
+      'file': {
+        file { '/etc/corosync/authkey':
+          ensure  => file,
+          source  => $authkey,
+          mode    => '0400',
+          owner   => 'root',
+          group   => 'root',
+          notify  => Service['corosync'],
+          require => Package['corosync'],
+        }
+      }
+      'string': {
+        file { '/etc/corosync/authkey':
+          ensure  => file,
+          content => $authkey,
+          mode    => '0400',
+          owner   => 'root',
+          group   => 'root',
+          notify  => Service['corosync'],
+          require => Package['corosync'],
+        }
+      }
+      default: {}
     }
   }
-  if $::operatingsystem == 'Ubuntu' {
-    file { "/etc/init/corosync.override":
-      replace => "no",
-      ensure  => "present",
-      content => "manual",
-      mode    => '0644',
-      before  => Package[corosync],
-    }
-    package {'python-pcs': ensure => present} ->
-      Package['pacemaker']
-  } else {
-    package {'pcs': ensure => present} ->
-      package {'crmsh': ensure => present} ->
-        Package['pacemaker']
+
+  package {$packages:
+    ensure => present,
   }
-  package { ['corosync', 'pacemaker']: ensure => present }
 
   # Template uses:
   # - $unicast_addresses
   # - $multicast_address
   # - $debug
-  # - $bind_address
-  # - $port
-  # - $enable_secauth
-  # - $threads
+  # - $bind_address_real
+  # - $port_real
+  # - $enable_secauth_real
+  # - $threads_real
   file { '/etc/corosync/corosync.conf':
     ensure  => file,
     mode    => '0644',
@@ -158,63 +210,34 @@ class corosync (
     require => Package['corosync']
   }
 
-  if $::osfamily == "RedHat" {
-    Package['pacemaker'] ->
-    file { '/var/lib/pacemaker':
-      ensure  => directory,
-      mode    => '0750',
-      owner   => 'hacluster',
-      group   => 'haclient',
-    } ->
-    file { '/var/lib/pacemaker/cores':
-      ensure  => directory,
-      mode    => '0750',
-      owner   => 'hacluster',
-      group   => 'haclient',
-    } ->
-    file { '/var/lib/pacemaker/cores/root':
-      ensure  => directory,
-      mode    => '0750',
-      owner   => 'hacluster',
-      group   => 'haclient',
-    } ->
-    Service['corosync']
-  }
-
-  if $::osfamily == 'Debian' {
-    exec { 'enable corosync':
-      command => 'sed -i s/START=no/START=yes/ /etc/default/corosync',
-      path    => ['/bin', '/usr/bin'],
-      unless  => 'grep START=yes /etc/default/corosync',
-      require => Package['corosync'],
-      before  => Service['corosync'],
-    }
-    if $::operatingsystem == 'Ubuntu' {
-      exec { 'rm_corosync_override':
-        command => '/bin/rm -f /etc/init/corosync.override',
-        path    => ['/bin', '/usr/bin'],
+  case $::osfamily {
+    'Debian': {
+      exec { 'enable corosync':
+        command => 'sed -i s/START=no/START=yes/ /etc/default/corosync',
+        path    => [ '/bin', '/usr/bin' ],
+        unless  => 'grep START=yes /etc/default/corosync',
+        require => Package['corosync'],
+        before  => Service['corosync'],
       }
     }
+    default: {}
   }
 
-
-  if $check_standby == true {
+  if $check_standby {
     # Throws a puppet error if node is on standby
     exec { 'check_standby node':
       command => 'echo "Node appears to be on standby" && false',
-      path    => ['/bin', '/usr/bin', '/sbin', '/usr/sbin'],
-      onlyif  => "crm node status|grep ${::hostname}-standby|
-      grep 'value=\"on\"'",
+      path    => [ '/bin', '/usr/bin', '/sbin', '/usr/sbin' ],
+      onlyif  => "crm node status|grep ${::hostname}-standby|grep 'value=\"on\"'",
       require => Service['corosync'],
     }
   }
 
-  if $force_online == true {
+  if $force_online {
     exec { 'force_online node':
       command => 'crm node online',
-      path    => ['/bin', '/usr/bin', '/sbin', '/usr/sbin'],
-      onlyif  => "crm node status|grep ${::hostname}-standby|
-      grep 'value=\"on\"'",
+      path    => [ '/bin', '/usr/bin', '/sbin', '/usr/sbin' ],
+      onlyif  => "crm node status|grep ${::hostname}-standby|grep 'value=\"on\"'",
       require => Service['corosync'],
     }
   }
@@ -222,9 +245,14 @@ class corosync (
   service { 'corosync':
     ensure    => running,
     enable    => true,
-    hasrestart => true,
-    hasstatus  => true,
-    subscribe => File[['/etc/corosync/corosync.conf', '/etc/corosync/service.d']],
+    subscribe => File[ [ '/etc/corosync/corosync.conf', '/etc/corosync/service.d' ] ],
   }
 
+  if $corosync_version != '1' {
+    service { 'pacemaker':
+      ensure    => running,
+      enable    => true,
+      subscribe => Service['corosync'],
+    }
+  }
 }

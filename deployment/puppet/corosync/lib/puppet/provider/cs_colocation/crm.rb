@@ -1,7 +1,7 @@
 require 'pathname'
-require Pathname.new(__FILE__).dirname.dirname.expand_path + 'corosync'
+require Pathname.new(__FILE__).dirname.dirname.expand_path + 'crmsh'
 
-Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Corosync) do
+Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Crmsh) do
   desc 'Specific provider for a rather specific type since I currently have no plan to
         abstract corosync/pacemaker vs. keepalived.  This provider will check the state
         of current primitive colocations on the system; add, delete, or adjust various
@@ -9,12 +9,7 @@ Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Cor
 
   # Path to the crm binary for interacting with the cluster configuration.
   # Decided to just go with relative.
-
-  commands :cibadmin => 'cibadmin'
-  commands :crm_shadow => 'crm_shadow'
   commands :crm => 'crm'
-  commands :crm_diff => 'crm_diff'
-  commands :crm_attribute => 'crm_attribute'
 
   def self.instances
 
@@ -22,29 +17,43 @@ Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Cor
 
     instances = []
 
-    #cmd = [ command(:crm), 'configure', 'show', 'xml' ]
-    raw, status = dump_cib
+    cmd = [ command(:crm), 'configure', 'show', 'xml' ]
+    if Puppet::PUPPETVERSION.to_f < 3.4
+      raw, status = Puppet::Util::SUIDManager.run_and_capture(cmd)
+    else
+      raw = Puppet::Util::Execution.execute(cmd)
+      status = raw.exitstatus
+    end
     doc = REXML::Document.new(raw)
 
     doc.root.elements['configuration'].elements['constraints'].each_element('rsc_colocation') do |e|
+      rscs = []
       items = e.attributes
 
       if items['rsc-role']
-        rsc = "#{items['rsc']}:#{items['rsc-role']}"
-      else
-        rsc = items['rsc']
+        rscs << "#{items['rsc']}:#{items['rsc-role']}"
+      elsif items['rsc']
+        rscs << items['rsc']
       end
 
       if items ['with-rsc-role']
-        with_rsc = "#{items['with-rsc']}:#{items['with-rsc-role']}"
-      else
-        with_rsc = items['with-rsc']
+        rscs << "#{items['with-rsc']}:#{items['with-rsc-role']}"
+      elsif items['with-rsc']
+        rscs << items['with-rsc']
       end
 
+      if !items['rsc'] or !items['with-rsc']
+        e.elements['resource_set'].each_element('resource_ref') do |ref|
+          rscs << ref.attributes['id']
+        end
+      end
+
+      # Sorting the array of primitives because order doesn't matter so someone
+      # switching the order around shouldn't generate an event.
       colocation_instance = {
         :name       => items['id'],
         :ensure     => :present,
-        :primitives => [rsc, with_rsc],
+        :primitives => rscs.sort,
         :score      => items['score'],
         :provider   => self.name
       }
@@ -89,7 +98,7 @@ Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Cor
   # resource already exists so we just update the current value in the property
   # hash and doing this marks it to be flushed.
   def primitives=(should)
-    @property_hash[:primitives] = should
+    @property_hash[:primitives] = should.sort
   end
 
   def score=(should)
@@ -102,13 +111,13 @@ Puppet::Type.type(:cs_colocation).provide(:crm, :parent => Puppet::Provider::Cor
   # as stdin for the crm command.
   def flush
     unless @property_hash.empty?
-      self.class.block_until_ready
       updated = "colocation "
       updated << "#{@property_hash[:name]} #{@property_hash[:score]}: #{@property_hash[:primitives].join(' ')}"
       Tempfile.open('puppet_crm_update') do |tmpfile|
-        tmpfile.write(updated.rstrip)
+        tmpfile.write(updated)
         tmpfile.flush
-        apply_changes(@resource[:name],tmpfile,'colocation')
+        ENV["CIB_shadow"] = @resource[:cib]
+        crm('configure', 'load', 'update', tmpfile.path.to_s)
       end
     end
   end

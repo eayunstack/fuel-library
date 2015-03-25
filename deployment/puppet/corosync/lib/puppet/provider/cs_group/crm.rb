@@ -1,26 +1,31 @@
 require 'pathname'
-require Pathname.new(__FILE__).dirname.dirname.expand_path + 'corosync'
+require Pathname.new(__FILE__).dirname.dirname.expand_path + 'crmsh'
 
-Puppet::Type.type(:cs_group).provide(:crm, :parent => Puppet::Provider::Corosync) do
+Puppet::Type.type(:cs_group).provide(:crm, :parent => Puppet::Provider::Crmsh) do
   desc 'Provider to add, delete, manipulate primitive groups.'
 
   # Path to the crm binary for interacting with the cluster configuration.
   commands :crm => '/usr/sbin/crm'
-  commands :crm_attribute => '/usr/sbin/crm_attribute'
+
   def self.instances
 
     block_until_ready
 
     instances = []
 
-    #cmd = [ command(:crm), 'configure', 'show', 'xml' ]
-    raw, status = dump_cib
+    cmd = [ command(:crm), 'configure', 'show', 'xml' ]
+    if Puppet::PUPPETVERSION.to_f < 3.4
+      raw, status = Puppet::Util::SUIDManager.run_and_capture(cmd)
+    else
+      raw = Puppet::Util::Execution.execute(cmd)
+      status = raw.exitstatus
+    end
     doc = REXML::Document.new(raw)
 
     REXML::XPath.each(doc, '//group') do |e|
 
       items = e.attributes
-      group = { :name => items['id'] }
+      group = { :name => items['id'].to_sym }
 
       primitives = []
 
@@ -82,15 +87,13 @@ Puppet::Type.type(:cs_group).provide(:crm, :parent => Puppet::Provider::Corosync
   # as stdin for the crm command.
   def flush
     unless @property_hash.empty?
-      self.class.block_until_ready
       updated = 'group '
       updated << "#{@property_hash[:name]} #{@property_hash[:primitives].join(' ')}"
       Tempfile.open('puppet_crm_update') do |tmpfile|
-        tmpfile.write(updated.rstrip)
+        tmpfile.write(updated)
         tmpfile.flush
-        env = {}
-        env["CIB_shadow"] = @resource[:cib].to_s if !@resource[:cib].nil?
-        exec_withenv("#{command(:crm)} configure load update #{tmpfile.path.to_s}",env)
+        ENV['CIB_shadow'] = @resource[:cib]
+        crm('configure', 'load', 'update', tmpfile.path.to_s)
       end
     end
   end
