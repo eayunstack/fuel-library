@@ -76,9 +76,9 @@
                 #set $netinfo = "%s --hostname=%s" % ($netinfo, $hostname)
             #end if
 # Configuring $iname ($mac)
-if ifconfig -a | grep -i $mac
+if ip addr | grep -i $mac
 then
-  IFNAME=\$(ifconfig -a | grep -i '$mac' | cut -d " " -f 1)
+  IFNAME=\$(for i in /sys/class/net/*; do if [ -f \$i/address -a \$(head -n 1 \$i/address) = '$mac' ]; then basename \$i; break; fi; done)
   echo "network --noipv6 --device=\$IFNAME $netinfo" >> /tmp/pre_install_network_config
             #for $route in $static_routes
                 #if $routepattern.match($route)

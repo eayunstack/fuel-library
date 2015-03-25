@@ -70,6 +70,7 @@ class PManager(object):
         if disk["extra"]:
             command += " || "
         command += "ls /dev/{0}".format(disk["id"])
+        command += " || ls /dev/{0}".format(disk["name"])
         command += ") 2>/dev/null) )"
         return command
 
@@ -170,7 +171,7 @@ class PManager(object):
         self.pre("parted -a optimal -s {0} "
                  "unit {3} mkpart primary {1} {2}".format(
                      self._disk_dev(disk),
-                     self.psize(disk["id"]),
+                     self.psize(disk["id"]) + 1,
                      self.psize(disk["id"], 24 * self.factor),
                      self.unit
             )

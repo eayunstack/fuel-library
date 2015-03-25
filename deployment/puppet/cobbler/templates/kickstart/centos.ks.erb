@@ -29,6 +29,7 @@ timezone --utc <%= @ks_system_timezone %>
 reboot
 
 firewall --disable
+services --disabled=NetworkManager
 zerombr
 
 # SET ROOT PASSWORD DEFAULT IS r00tme
@@ -102,6 +103,8 @@ $SNIPPET('pre_install_partition_lvm')
 # CONFIGURE ANACONDA YUM SETTINGS
 $SNIPPET('anaconda-yum')
 
+%end
+
 # PACKAGES SECTION
 # HERE ARE LIST OF PACKAGES THAT WILL BE INSTALLED
 # FIXME --ignoremissing
@@ -160,6 +163,8 @@ $SNIPPET('puppet_install_if_enabled')
 # LISTS mcollective PACKAGE IF mco_auto_setup VARIABLE IS SET TO 1
 $SNIPPET('mcollective_install_if_enabled')
 
+%end
+
 # POST INSTALLATION PARTITIONING
 # THERE ARE SOME COMMANDS TO CREATE LARGE (>1TB) VOLUMES
 # AND INSTALL GRUB BOOTLOADER TO MAKE NODES ABLE TO BOOT FROM ANY HARDDRIVE
@@ -215,7 +220,7 @@ $SNIPPET('kickstart_ntp')
 $SNIPPET('ntp_to_masternode')
 
 # Let's not to use separate snippet for just one line of code. Complexity eats my time.
-echo 'flock -w 0 -o /var/lock/agent.lock -c "/opt/nailgun/bin/agent >> /var/log/nailgun-agent.log 2>&1"' >> /etc/rc.local
+echo 'flock -n -o /var/lock/agent.lock -c "/opt/nailgun/bin/agent >> /var/log/nailgun-agent.log 2>&1"' >> /etc/rc.local
 
 # It is for the internal nailgun using
 echo target > /etc/nailgun_systemtype

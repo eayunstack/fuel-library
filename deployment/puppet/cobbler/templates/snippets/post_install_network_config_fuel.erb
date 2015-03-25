@@ -146,7 +146,7 @@ echo "$interface_extra.upper()=$mgmt_parameters.get($mgmt_param)" >> $devfile
             #if $mac != "" and $iface_type not in ("master","bond","bridge")
             ## virtual interfaces don't get MACs
 echo "HWADDR=$mac" >> $devfile
-IFNAME=\$(ifconfig -a | grep -i '$mac' | cut -d ' ' -f 1)
+IFNAME=\$(for i in /sys/class/net/*; do if [ -f \$i/address -a \$(head -n 1 \$i/address) = '$mac' ]; then basename \$i; break; fi; done)
             ## Rename this interface in modprobe.conf
             ## FIXME: if both interfaces startwith eth this is wrong
 if [ -f "/etc/modprobe.conf" ] && [ \$IFNAME ]; then
