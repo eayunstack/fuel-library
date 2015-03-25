@@ -12,7 +12,7 @@ class ceph::mon (
   }
 
   exec {'ceph-deploy mon create':
-    command   => "ceph-deploy mon create ${::hostname}:${::internal_address}",
+    command   => "ceph-deploy --overwrite-conf mon create ${::hostname}:${::internal_address}",
     logoutput => true,
     unless    => "ceph mon stat | grep ${::internal_address}",
   }

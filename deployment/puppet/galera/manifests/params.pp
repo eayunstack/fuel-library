@@ -33,12 +33,13 @@ class galera::params {
   $table_open_cache        = '10000'
   $open_files_limit        = '102400'
   $max_connections         = '4096'
+  $datadir                 = '/var/lib/mysql'
 
   case $::osfamily {
     'RedHat': {
       $libaio_package       = 'libaio'
-      $mysql_server_name    = 'MySQL-server-wsrep'
-      $mysql_client_name    = 'MySQL-client-wsrep'
+      $mysql_server_name    = 'mariadb-galera-server'
+      $mysql_client_name    = 'mariadb'
       $libgalera_prefix     = '/usr/lib64'
     }
     'Debian': {

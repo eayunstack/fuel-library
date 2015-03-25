@@ -17,7 +17,7 @@ class ceph::osd (
     # resonable amount of time would be around 300 times the length of
     # $osd_nodes. Right now its 0 to prevent puppet from aborting it.
 
-    command   => "ceph-deploy osd prepare ${devices}",
+    command   => "ceph-deploy --overwrite-conf osd prepare ${devices}",
     returns   => 0,
     timeout   => 0, # TODO: make this something reasonable
     tries     => 2, # This is necessary because of race for mon creating keys

@@ -16,11 +16,11 @@ class l23network::params {
     }
     /(?i)redhat/: {
       $ovs_service_name   = 'openvswitch'
-      $ovs_status_cmd     = '/etc/init.d/openvswitch status'
+      $ovs_status_cmd     = 'systemctl status openvswitch.service'
       $lnx_vlan_tools     = 'vconfig'
       $lnx_bond_tools     = undef
       $lnx_ethernet_tools = 'ethtool'
-      $ovs_datapath_package_name = 'kmod-openvswitch'
+      $ovs_datapath_package_name = undef
       $ovs_common_package_name   = 'openvswitch'
     }
     default: {

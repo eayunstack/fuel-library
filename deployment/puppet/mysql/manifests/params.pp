@@ -47,12 +47,12 @@ class mysql::params {
            $shared_version        = '5.1.69-1'
          }
       default: {
-           $service_name          = 'mysql'
-           $client_package_name   = 'MySQL-client'
+           $service_name          = 'mariadb'
+           $client_package_name   = 'mariadb'
            $client_version        = '5.5.28_wsrep_23.7'
-           $server_package_name   = 'MySQL-server'
+           $server_package_name   = 'mariadb-galera-server'
            $server_version        = '5.5.28_wsrep_23.7'
-           $shared_package_name   = 'MySQL-shared'
+           $shared_package_name   = 'mariadb-libs'
            $shared_version        = '5.5.28_wsrep_23.7'
          }
       }

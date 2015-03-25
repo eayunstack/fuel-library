@@ -32,6 +32,8 @@
 
 # Fill in some defaults if no values are specified
 
+PATH=/usr/sbin:/usr/bin
+
 OCF_RESKEY_binary_default="neutron-openvswitch-agent"
 OCF_RESKEY_config_default="/etc/neutron/neutron.conf"
 OCF_RESKEY_plugin_config_default="/etc/neutron/plugin.ini"
@@ -173,7 +175,16 @@ END
 }
 
 get_worker_pid() {
-    pid=`pgrep -u ${OCF_RESKEY_user} -fol ${OCF_RESKEY_binary} | grep -E  "python\s+\/usr\/bin" | awk '{print $1}'`
+    local options
+    local pid
+    # FIXME: Remove if condition and set 'falo' statically once Fuel
+    # discontinue support of Ubuntu 12.04 and CentOs 6.x where -a was not defined.
+    if pgrep -V | awk 'match($0, /[0-9]\.[0-9].*/) {if (substr($0, RSTART, RLENGTH) < 3.3) {exit 1}}'; then
+      options='falo'
+    else
+      options='flo'
+    fi
+    pid=`pgrep -u ${OCF_RESKEY_user} -${options} ${OCF_RESKEY_binary} | awk '/python \/usr\/bin/ {print $1}'`
     echo $pid
 }
 
@@ -287,7 +298,7 @@ neutron_ovs_agent_start() {
     # Don't use ocf_run as we're sending the tool's output
     su ${OCF_RESKEY_user} -s /bin/sh -c "${OCF_RESKEY_binary} --config-file=$OCF_RESKEY_config \
         --config-file=$OCF_RESKEY_plugin_config --log-file=$OCF_RESKEY_log_file $OCF_RESKEY_additional_parameters \
-        >> /dev/null"' 2>&1 & echo \$! > $OCF_RESKEY_pid'
+        >> /dev/null 2>&1 & echo \$! > $OCF_RESKEY_pid"
     ocf_log debug "Create pid file: ${OCF_RESKEY_pid} with content $(cat ${OCF_RESKEY_pid})"
 
     # Spin waiting for the server to come up.

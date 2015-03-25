@@ -51,6 +51,13 @@ class nova::params {
             $special_service_provider = undef
           }
         }
+        'CentOS': {
+          if ($::operatingsystemmajrelease < 7) {
+            $special_service_provider = 'init'
+          } else {
+            $special_service_provider = undef
+          }
+        }
         default: {
           $special_service_provider = 'init'
         }
