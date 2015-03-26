@@ -45,11 +45,22 @@ class cobbler::server (
       $cobbler_web_service = 'httpd'
       $dnsmasq_service     = 'dnsmasq'
 
-      service { 'xinetd':
-        ensure     => running,
-        enable     => true,
-        hasrestart => true,
-        require    => Package[$cobbler::packages::cobbler_additional_packages],
+      if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+        service { 'xinetd':
+          ensure     => running,
+          hasstatus  => false,
+          start      => '/usr/sbin/xinetd -stayalive',
+          binary     => '/usr/sbin/xinetd',
+          provider   => 'base',
+          require    => Package[$cobbler::packages::cobbler_additional_packages],
+        }
+      } else {
+        service { 'xinetd':
+          ensure     => running,
+          enable     => true,
+          hasrestart => true,
+          require    => Package[$cobbler::packages::cobbler_additional_packages],
+        }
       }
 
       file { '/etc/xinetd.conf':
@@ -79,34 +90,78 @@ class cobbler::server (
       Service[$dnsmasq_service]
 
   if $production !~ /docker/ {
-    service { $cobbler_service:
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      require    => Package[$cobbler::packages::cobbler_package],
-    }
+    if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+      service { $cobbler_service:
+        ensure     => running,
+        hasstatus  => false,
+        start      => '/usr/bin/cobblerd',
+        binary     => '/usr/bin/cobblerd',
+        pattern    => 'cobblerd',
+        provider   => 'base',
+        require    => Package[$cobbler::packages::cobbler_package],
+      }
 
-    service { $dnsmasq_service:
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      require    => Package[$cobbler::packages::dnsmasq_package],
-      subscribe  => Exec['cobbler_sync'],
+      service { $dnsmasq_service:
+        ensure     => running,
+        hasstatus  => false,
+        start      => '/usr/sbin/dnsmasq',
+        binary     => '/usr/sbin/dnsmasq',
+        provider   => 'base',
+        require    => Package[$cobbler::packages::dnsmasq_package],
+        subscribe  => Exec['cobbler_sync'],
+      }
+    } else {
+      service { $cobbler_service:
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        require    => Package[$cobbler::packages::cobbler_package],
+      }
+
+      service { $dnsmasq_service:
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        require    => Package[$cobbler::packages::dnsmasq_package],
+        subscribe  => Exec['cobbler_sync'],
+      }
     }
   } else {
-    service { $cobbler_service:
-      ensure     => running,
-      enable     => true,
-      hasrestart => true,
-      require    => Package[$cobbler::packages::cobbler_package],
-    }
+    if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+      service { $cobbler_service:
+        ensure     => running,
+        hasstatus  => false,
+        start      => '/usr/bin/cobblerd',
+        binary     => '/usr/bin/cobblerd',
+        pattern    => 'cobblerd',
+        provider   => 'base',
+        require    => Package[$cobbler::packages::cobbler_package],
+      }
 
-    service { $dnsmasq_service:
-      ensure     => false,
-      enable     => false,
-      hasrestart => true,
-      require    => Package[$cobbler::packages::dnsmasq_package],
-      subscribe  => Exec['cobbler_sync'],
+      service { $dnsmasq_service:
+        ensure     => false,
+        hasstatus  => false,
+        start      => '/usr/sbin/dnsmasq',
+        binary     => '/usr/sbin/dnsmasq',
+        provider   => 'base',
+        require    => Package[$cobbler::packages::dnsmasq_package],
+        subscribe  => Exec['cobbler_sync'],
+      }
+    } else {
+      service { $cobbler_service:
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        require    => Package[$cobbler::packages::cobbler_package],
+      }
+
+      service { $dnsmasq_service:
+        ensure     => false,
+        enable     => false,
+        hasrestart => true,
+        require    => Package[$cobbler::packages::dnsmasq_package],
+        subscribe  => Exec['cobbler_sync'],
+      }
     }
   }
   if $apache_ssl_module {
@@ -124,11 +179,22 @@ class cobbler::server (
     }
   }
 
-  service { $cobbler_web_service:
-    ensure     => running,
-    enable     => true,
-    hasrestart => true,
-    require    => Package[$cobbler::packages::cobbler_web_package],
+  if $::is_virtual == 'true' and $::virtual =~ /docker/ {
+    service { $cobbler_web_service:
+      ensure     => running,
+      hasstatus  => false,
+      start      => '/usr/sbin/httpd',
+      binary     => '/usr/sbin/httpd',
+      provider   => 'base',
+      require    => Package[$cobbler::packages::cobbler_web_package],
+    }
+  } else {
+    service { $cobbler_web_service:
+      ensure     => running,
+      enable     => true,
+      hasrestart => true,
+      require    => Package[$cobbler::packages::cobbler_web_package],
+    }
   }
 
   exec { 'wait_for_web_service':

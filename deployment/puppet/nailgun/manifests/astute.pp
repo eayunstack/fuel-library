@@ -19,7 +19,15 @@ class nailgun::astute(
   #   logoutput => true,
   # }
 
-  package { 'ruby21-rubygem-astute': }
+  case $::rubyversion {
+    '2.1.1': {
+      package { 'ruby21-rubygem-astute': }
+    }
+    default: {
+      package { 'rubygem-astute': }
+    }
+  }
+
 
   file { '/usr/bin/astuted':
     content => template('nailgun/astuted.erb'),

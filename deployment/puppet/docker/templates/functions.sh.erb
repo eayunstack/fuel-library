@@ -1,5 +1,7 @@
 #!/bin/bash
 
+osmajrel=$(facter operatingsystemmajrelease)
+
 if ${DEBUG}; then
   DOCKER="docker -D"
 else
@@ -109,7 +111,7 @@ function check_ready {
       ostf) retry_checker "egrep -q ^[2-4][0-9]? < <(curl --connect-timeout 1 -s -w '%{http_code}' http://$ADMIN_IP:8777/ostf/not_found -o /dev/null)" ;;
       #NOTICE: Cobbler console tool does not comply unix conversation: 'cobbler profile find' always return 0 as exit code
       cobbler) retry_checker "shell_container cobbler ps aux | grep -q 'cobblerd -F'"
-               retry_checker "shell_container cobbler cobbler profile find --name=centos* | grep -q centos && shell_container cobbler cobbler profile find --name=ubuntu* | grep -q ubuntu && shell_container cobbler cobbler profile find --name=bootstrap* | grep -q bootstrap" ;;
+               retry_checker "shell_container cobbler cobbler profile find --name=centos* | grep -q centos && shell_container cobbler cobbler profile find --name=bootstrap* | grep -q bootstrap" ;;
       rabbitmq) retry_checker "curl -f -L -i  -u \"$astute_user:$astute_password\" http://$ADMIN_IP:15672/api/nodes  1>/dev/null 2>&1"
                 retry_checker "curl -f -L -u \"$mcollective_user:$mcollective_password\" -s http://$ADMIN_IP:15672/api/exchanges | grep -qw 'mcollective_broadcast'"
                 retry_checker "curl -f -L -u \"$mcollective_user:$mcollective_password\" -s http://$ADMIN_IP:15672/api/exchanges | grep -qw 'mcollective_directed'" ;;
@@ -276,7 +278,12 @@ function shell_container {
     shift
     command=("$@")
   fi
-  lxc-attach --name "$id" -- "${command[@]}"
+
+  if [ x"$osmajrel" == x"7" ]; then
+    docker exec "$id" ${command[@]}
+  else
+    lxc-attach --name "$id" -- "${command[@]}"
+  fi
 }
 
 function stop_container {
@@ -302,7 +309,12 @@ function destroy_container {
         #This happens because devicemapper glitched
         #Try to unmount all devicemapper mounts manually and try again
         echo "Destruction of container $container failed. Trying workaround..."
-        id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$container]})
+        if [ x"$osmajrel" == x"7" ]; then
+          id=$(${DOCKER} inspect -f='{{.Id}}' ${CONTAINER_NAMES[$container]})
+        else
+          id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$container]})
+        fi
+
         if [ -z $id ]; then
           echo "Could not get docker ID for $container" 1>&2
           return 1
@@ -334,10 +346,18 @@ function container_lookup {
 
 function get_container_id {
   #Try to get ID from container short name first
-  id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$1]} 2>/dev/null)
+  if [ x"$osmajrel" == x"7" ]; then
+    id=$(${DOCKER} inspect -f='{{.Id}}' ${CONTAINER_NAMES[$1]} 2>/dev/null)
+  else
+    id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$1]} 2>/dev/null)
+  fi
   if [ -z "$id" ]; then
      #Try to get ID short ID, long ID, or container name
-     id=$(${DOCKER} inspect -f='{{.ID}}' "$1")
+     if [ x"$osmajrel" == x"7" ]; then
+       id=$(${DOCKER} inspect -f='{{.Id}}' "$1")
+     else
+       id=$(${DOCKER} inspect -f='{{.ID}}' "$1")
+     fi
      if [ -z "$id" ]; then
        echo "Could not get docker ID for container $1. Is it running?" 1>&2
        return 1
@@ -512,7 +532,11 @@ function allow_all_docker_traffic {
 }
 
 function container_root {
-  id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$1]})
+  if [ x"$osmajrel" == x"7" ]; then
+    id=$(${DOCKER} inspect -f='{{.Id}}' ${CONTAINER_NAMES[$1]})
+  else
+    id=$(${DOCKER} inspect -f='{{.ID}}' ${CONTAINER_NAMES[$1]})
+  fi
   if [ -n "$id" ]; then
     echo "/var/lib/docker/devicemapper/mnt/${id}/rootfs"
     return 0

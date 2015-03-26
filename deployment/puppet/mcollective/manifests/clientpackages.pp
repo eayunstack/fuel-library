@@ -21,7 +21,7 @@ class mcollective::clientpackages
       $mcollective_client_package = "ruby21-rubygem-mcollective-client"
       package { 'ruby21-nailgun-mcagents': }
     }
-    '1.8.7': {
+    default: {
       $mcollective_client_package = "mcollective-client"
       package { 'nailgun-mcagents': }
     }

@@ -1,11 +1,17 @@
 $fuel_settings = parseyaml($astute_settings_yaml)
 
-$postgres_default_version = '9.3'
+if $::operatingsystemmajrelease >= 7 {
+  $postgres_default_version = '9.2'
+  $default_bindir = "/usr/bin"
+} else {
+  $postgres_default_version = '9.3'
+  $default_bindir = "/usr/pgsql-${postgres_default_version}/bin"
+}
 
 # install and configure postgresql server
 class { 'postgresql::globals':
   version             => $postgres_default_version,
-  bindir              => "/usr/pgsql-${postgres_default_version}/bin",
+  bindir              => $default_bindir,
   server_package_name => "postgresql-server",
   client_package_name => "postgresql",
 }

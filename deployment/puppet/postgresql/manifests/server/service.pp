@@ -11,13 +11,24 @@ class postgresql::server::service {
 
   anchor { 'postgresql::server::service::begin': }
 
-  service { 'postgresqld':
-    ensure    => $service_ensure,
-    enable    => $service_enable,
-    name      => $service_name,
-    provider  => $service_provider,
-    hasstatus => true,
-    status    => $service_status,
+  if $::is_virtual == 'true' and $::virtual =~ /docker/ and $::operatingsystemmajrelease >= 7 {
+    service { 'postgresqld':
+      ensure    => $service_ensure,
+      enable    => false,
+      start     => 'su - postgres -c "export PGPORT=5432;export PGDATA=/var/lib/pgsql/data;/usr/bin/postgresql-check-db-dir \${PGDATA};/usr/bin/pg_ctl start -D \${PGDATA} -s -o \"-p \${PGPORT}\" -w -t 300"',
+      stop      => 'su - postgres -c "export PGPORT=5432;export PGDATA=/var/lib/pgsql/data;/usr/bin/pg_ctl stop -D \${PGDATA} -s -m fast"',
+      binary    => '/usr/bin/postgres',
+      provider  => 'base',
+    }
+  } else {
+    service { 'postgresqld':
+      ensure    => $service_ensure,
+      enable    => $service_enable,
+      name      => $service_name,
+      provider  => $service_provider,
+      hasstatus => true,
+      status    => $service_status,
+    }
   }
 
   if $service_ensure == 'running' {
