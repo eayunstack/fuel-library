@@ -186,6 +186,7 @@ class openstack::compute (
       # From legacy params.pp
       $libvirt_type_kvm             = $::operatingsystem ? {
                                     redhat =>  'qemu-kvm-rhev',
+                                    CentOS =>  'qemu-kvm-rhev',
                                     default => 'qemu-kvm',
                                   }
       $guestmount_package_name      = 'libguestfs-tools-c'
