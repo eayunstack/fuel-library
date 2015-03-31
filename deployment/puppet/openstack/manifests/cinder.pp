@@ -174,10 +174,14 @@ class openstack::cinder(
       }
       'ceph': {
         Ceph::Pool<| title == $::ceph::cinder_pool |> ->
-        class {'cinder::volume::rbd':
-          rbd_pool        => $::ceph::cinder_pool,
-          rbd_user        => $::ceph::cinder_user,
-          rbd_secret_uuid => $::ceph::rbd_secret_uuid,
+        cinder::backend::rbd {'cinder_ceph':
+          rbd_pool            => $::ceph::cinder_pool,
+          rbd_user            => $::ceph::cinder_user,
+          rbd_secret_uuid     => $::ceph::rbd_secret_uuid,
+          volume_backend_name => 'cinder_ceph',
+        }
+        class {'cinder::backends':
+          enabled_backends    => ['cinder_ceph'],
         }
       }
     }
