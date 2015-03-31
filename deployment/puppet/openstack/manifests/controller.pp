@@ -478,6 +478,16 @@ class openstack::controller (
         idle_timeout         => $idle_timeout,
         ceilometer           => $ceilometer,
       } # end class
+
+      if $::fuel_settings['storage']['volumes_ceph'] {
+        class {'openstack::create_vol_types':
+          set_type	=> 'rbd',
+          set_key		=> 'volume_backend_name',
+          set_value	=> 'cinder_ceph',
+          require		=> [Class['openstack::cinder'], Class['cinder::keystone::auth']]
+        }
+      } # end volumes-ceph
+
     } else { # defined
       if $manage_volumes {
       # Set up nova-volume
