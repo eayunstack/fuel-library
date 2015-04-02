@@ -20,7 +20,7 @@ class cobbler::checksum_bootpc () {
   case $operatingsystem {
     /(?i)(centos|redhat)/ : {
       exec { "checksum_fill_bootpc":
-        command => "iptables -t mangle -A POSTROUTING -p udp --dport 68 -j CHECKSUM --checksum-fill; /etc/init.d/iptables save",
+        command => "iptables -t mangle -A POSTROUTING -p udp --dport 68 -j CHECKSUM --checksum-fill; /usr/libexec/iptables/iptables.init save",
         unless  => "iptables -t mangle -S POSTROUTING | grep -q \"^-A POSTROUTING -p udp -m udp --dport 68 -j CHECKSUM --checksum-fill\""
       }
     }

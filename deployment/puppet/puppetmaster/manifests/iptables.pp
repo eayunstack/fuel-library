@@ -6,7 +6,7 @@ class puppetmaster::iptables {
     $rule = "-p $protocol -m state --state NEW -m $protocol --dport $port -j ACCEPT"
     exec { "access_to_puppetmaster_${protocol}_port: $port":
       command => "iptables -t filter -I INPUT 1 $rule; \
-      /etc/init.d/iptables save",
+      /usr/libexec/iptables/iptables.init save",
       unless => "iptables -t filter -S INPUT | grep -q \"^-A INPUT $rule\""
     }
   }

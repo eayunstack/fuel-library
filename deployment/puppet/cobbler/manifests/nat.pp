@@ -36,14 +36,14 @@ class cobbler::nat(
       exec { 'enable_nat_all':
         command => "iptables -t nat -I POSTROUTING 1 \
                     -s ${nat_range} ! -d ${nat_range} -j MASQUERADE; \
-                    /etc/init.d/iptables save",
+                    /usr/libexec/iptables/iptables.init save",
         unless  => "iptables -t nat -S POSTROUTING | grep -q \"^-A POSTROUTING \
                    -s ${nat_range} ! -d ${nat_range} -j MASQUERADE\""
       }
 
       exec { 'enable_nat_filter':
         command => 'iptables -t filter -I FORWARD 1 -j ACCEPT; \
-                   /etc/init.d/iptables save',
+                   /usr/libexec/iptables/iptables.init save',
         unless  => 'iptables -t filter -S FORWARD | grep -q "^-A FORWARD \
                    -j ACCEPT"'
       }

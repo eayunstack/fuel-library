@@ -13,13 +13,13 @@ node /^(fuel-pm|fuel-cobbler).mirantis.com/ {
 
   exec { "enable_nat_all":
     command => "iptables -t nat -I POSTROUTING 1 -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE; \
-    /etc/init.d/iptables save",
+    /usr/libexec/iptables/iptables.init save",
     unless => "iptables -t nat -S POSTROUTING | grep -q \"^-A POSTROUTING -s 10.0.0.0/24 ! -d 10.0.0.0/24 -j MASQUERADE\""
   }
   
   exec { "enable_nat_filter":
     command => "iptables -t filter -I FORWARD 1 -j ACCEPT; \
-    /etc/init.d/iptables save",
+    /usr/libexec/iptables/iptables.init save",
     unless => "iptables -t filter -S FORWARD | grep -q \"^-A FORWARD -j ACCEPT\""
   }
   
