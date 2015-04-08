@@ -1,5 +1,5 @@
 class docker::container (
-$tz           = 'UTC',
+$tz           = 'Asia/Shanghai',
 $zoneinfo_dir = '/usr/share/zoneinfo',
 ) {
 
