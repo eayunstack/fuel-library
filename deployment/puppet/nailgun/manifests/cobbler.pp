@@ -5,7 +5,7 @@ class nailgun::cobbler(
   $production,
   $gem_source,
 
-  $ks_system_timezone         = "Etc/UTC",
+  $ks_system_timezone         = "Asia/Shanghai",
   $server = $::ipaddress,
   $name_server = $::ipaddress,
   $next_server = $::ipaddress,
