@@ -1,6 +1,6 @@
 class nailgun::iptables (
 $production            = 'docker',
-$admin_iface           = 'eth0',
+$admin_iface           = $::fuel_settings['ADMIN_NETWORK']['interface'],
 $ssh_port              = '22',
 $nailgun_web_port      = '8000',
 $nailgun_internal_port = '8001',
@@ -23,6 +23,15 @@ $chain                 = 'INPUT',
     source     => "${network_address}/${network_cidr}",
     outiface   => 'eth+',
     jump       => 'MASQUERADE',
+  }
+  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
+    firewall { '004 forward_admin_net':
+      chain      => 'POSTROUTING',
+      table      => 'nat',
+      source     => "${network_address}/${network_cidr}",
+      outiface   => 'en+',
+      jump       => 'MASQUERADE',
+    }
   }
   sysctl::value{'net.ipv4.ip_forward': value=>'1'}
 
@@ -112,6 +121,15 @@ $chain                 = 'INPUT',
     iniface => $admin_iface,
     action  => 'accept',
   }
+  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
+    firewall { '020 ostf_admin':
+      chain   => $chain,
+      port    => $ostf_port,
+      proto   => 'tcp',
+      iniface => 'docker0',
+      action  => 'accept',
+    }
+  }
 
   firewall { '021 ostf_local':
     chain    => $chain,
@@ -149,6 +167,15 @@ $chain                 = 'INPUT',
     proto   => 'tcp',
     iniface => $admin_iface,
     action  => 'accept',
+  }
+  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
+    firewall { '040 rabbitmq_admin':
+      chain   => $chain,
+      port    => $rabbitmq_ports,
+      proto   => 'tcp',
+      iniface => 'docker0',
+      action  => 'accept',
+    }
   }
 
   firewall { '041 rabbitmq_local':
