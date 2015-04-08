@@ -1,0 +1,14 @@
+[Unit]
+Description=DHCP Relay Agent Daemon
+Documentation=man:dhcrelay(8)
+After=network.target
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=30
+EnvironmentFile=/etc/sysconfig/dhcrelay
+ExecStart=/usr/sbin/dhcrelay -d --no-pid $INTERFACES $DHCPSERVERS
+
+[Install]
+WantedBy=multi-user.target

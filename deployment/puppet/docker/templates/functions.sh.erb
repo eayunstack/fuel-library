@@ -514,7 +514,22 @@ function setup_dhcrelay_for_cobbler {
   fi
   cobbler_ip=$(${DOCKER} inspect --format='{{.NetworkSettings.IPAddress}}' ${CONTAINER_NAMES["cobbler"]})
   admin_interface=$(grep interface: $ASTUTE_YAML | cut -d':' -f2 | tr -d ' ')
-  cat > /etc/sysconfig/dhcrelay << EOF
+
+  if [ x"$osmajrel" == x"7" ]; then
+    cat > /etc/sysconfig/dhcrelay << EOF
+# Command line options here
+DHCRELAYARGS=""
+# DHCPv4 only
+INTERFACES="-i $admin_interface -i docker0"
+# DHCPv4 only
+DHCPSERVERS="$cobbler_ip"
+EOF
+    rpm -q dhcp 2>&1 > /dev/null || yum --quiet -y install dhcp
+    systemctl daemon-reload
+    systemctl enable fuel-dhcrelay
+    systemctl restart fuel-dhcrelay
+  else
+    cat > /etc/sysconfig/dhcrelay << EOF
 # Command line options here
 DHCRELAYARGS=""
 # DHCPv4 only
@@ -522,9 +537,10 @@ INTERFACES="$admin_interface docker0"
 # DHCPv4 only
 DHCPSERVERS="$cobbler_ip"
 EOF
-  rpm -q dhcp 2>&1 > /dev/null || yum --quiet -y install dhcp
-  chkconfig dhcrelay on
-  service dhcrelay restart
+    rpm -q dhcp 2>&1 > /dev/null || yum --quiet -y install dhcp
+    chkconfig dhcrelay on
+    service dhcrelay restart
+  fi
 }
 
 function allow_all_docker_traffic {
