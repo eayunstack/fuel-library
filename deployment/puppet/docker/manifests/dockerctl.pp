@@ -31,7 +31,7 @@ class docker::dockerctl (
     group   => 'root',
     content => template("docker/dhcrelay_monitor.erb")
   }
-  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease >= 7 {
     file { "/etc/systemd/system/fuel-dhcrelay.service":
       mode    => 0644,
       owner   => 'root',
