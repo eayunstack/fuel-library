@@ -24,8 +24,8 @@ $chain                 = 'INPUT',
     outiface   => 'eth+',
     jump       => 'MASQUERADE',
   }
-  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
-    firewall { '004 forward_admin_net':
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease >= 7 {
+    firewall { '004 forward_admin_net el7':
       chain      => 'POSTROUTING',
       table      => 'nat',
       source     => "${network_address}/${network_cidr}",
@@ -121,8 +121,8 @@ $chain                 = 'INPUT',
     iniface => $admin_iface,
     action  => 'accept',
   }
-  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
-    firewall { '020 ostf_admin':
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease >= 7 {
+    firewall { '020 ostf_admin docker0':
       chain   => $chain,
       port    => $ostf_port,
       proto   => 'tcp',
@@ -168,8 +168,8 @@ $chain                 = 'INPUT',
     iniface => $admin_iface,
     action  => 'accept',
   }
-  if $::operatingsystem == 'RedHat' and $::operatingsystemrelease >= 7 {
-    firewall { '040 rabbitmq_admin':
+  if $::osfamily == 'RedHat' and $::operatingsystemmajrelease >= 7 {
+    firewall { '040 rabbitmq_admin docker0':
       chain   => $chain,
       port    => $rabbitmq_ports,
       proto   => 'tcp',
