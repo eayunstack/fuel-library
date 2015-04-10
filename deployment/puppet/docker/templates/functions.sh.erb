@@ -608,7 +608,7 @@ function copy_files {
 }
 
 function backup {
-  backup_id=$(date +%F_%H%S)
+  backup_id=$(date +%F_%H%M)
   use_rsync=0
   #Sets backup_dir
   parse_backup_dir $1
