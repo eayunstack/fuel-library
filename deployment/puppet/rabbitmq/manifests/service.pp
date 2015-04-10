@@ -43,9 +43,9 @@ class rabbitmq::service(
     service { $service_name:
       ensure     => $ensure_real,
       enable     => false,
-      start      => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmq-server -detached; sleep 30"',
-      stop       => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmqctl stop"',
-      status     => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; /usr/lib/rabbitmq/bin/rabbitmqctl status"',
+      start      => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; export RABBITMQ_PID_FILE=/var/lib/rabbitmq/pid; /usr/lib/rabbitmq/bin/rabbitmq-server & /usr/sbin/rabbitmqctl wait \$RABBITMQ_PID_FILE"',
+      stop       => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; export RABBITMQ_PID_FILE=/var/lib/rabbitmq/pid; /usr/lib/rabbitmq/bin/rabbitmqctl stop"',
+      status     => 'su rabbitmq -s /bin/sh -c "cd /var/lib/rabbitmq; export HOME=/var/lib/rabbitmq; export RABBITMQ_PID_FILE=/var/lib/rabbitmq/pid; /usr/lib/rabbitmq/bin/rabbitmqctl status"',
       provider   => 'base',
     }
   } else {
