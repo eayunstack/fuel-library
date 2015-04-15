@@ -16,8 +16,10 @@
 #
 # OCF instance parameters:
 #   OCF_RESKEY_binary
+#   OCF_RESKEY_dist_config
 #   OCF_RESKEY_config
 #   OCF_RESKEY_plugin_config
+#   OCF_RESKEY_fwaas_driver_config
 #   OCF_RESKEY_user
 #   OCF_RESKEY_pid
 #   OCF_RESKEY_neutron_server_port
@@ -35,9 +37,11 @@
 PATH=/usr/sbin:/usr/bin
 
 OCF_RESKEY_binary_default="neutron-l3-agent"
+OCF_RESKEY_dist_config_default="/usr/share/neutron/neutron-dist.conf"
 OCF_RESKEY_config_default="/etc/neutron/neutron.conf"
 OCF_RESKEY_keystone_config_default="/etc/keystone/keystone.conf"
 OCF_RESKEY_plugin_config_default="/etc/neutron/l3_agent.ini"
+OCF_RESKEY_fwaas_driver_config_default="/etc/neutron/fwaas_driver.ini"
 OCF_RESKEY_log_file_default="/var/log/neutron/l3-agent.log"
 OCF_RESKEY_user_default="neutron"
 OCF_RESKEY_pid_default="${HA_RSCTMP}/${__SCRIPT_NAME}/${__SCRIPT_NAME}.pid"
@@ -56,9 +60,11 @@ OCF_RESKEY_debug_default=false
 : ${OCF_RESKEY_password=${OCF_RESKEY_password_default}}
 : ${OCF_RESKEY_tenant=${OCF_RESKEY_tenant_default}}
 : ${OCF_RESKEY_binary=${OCF_RESKEY_binary_default}}
+: ${OCF_RESKEY_dist_config=${OCF_RESKEY_dist_config_default}}
 : ${OCF_RESKEY_config=${OCF_RESKEY_config_default}}
 : ${OCF_RESKEY_keystone_config=${OCF_RESKEY_keystone_config_default}}
 : ${OCF_RESKEY_plugin_config=${OCF_RESKEY_plugin_config_default}}
+: ${OCF_RESKEY_fwaas_driver_config=${OCF_RESKEY_fwaas_driver_config_default}}
 : ${OCF_RESKEY_user=${OCF_RESKEY_user_default}}
 : ${OCF_RESKEY_pid=${OCF_RESKEY_pid_default}}
 : ${OCF_RESKEY_multiple_agents=${OCF_RESKEY_multiple_agents_default}}
@@ -109,6 +115,14 @@ Location of the OpenStack Router server binary (neutron-l3-agent)
 <content type="string" default="${OCF_RESKEY_binary_default}" />
 </parameter>
 
+<parameter name="dist_config" unique="0" required="0">
+<longdesc lang="en">
+Location of the OpenStack Router (neutron-server) distribution configuration file
+</longdesc>
+<shortdesc lang="en">OpenStack Router (neutron-server) dist config file</shortdesc>
+<content type="string" default="${OCF_RESKEY_dist_config_default}" />
+</parameter>
+
 <parameter name="config" unique="0" required="0">
 <longdesc lang="en">
 Location of the OpenStack Router (neutron-server) configuration file
@@ -131,6 +145,14 @@ Location of the OpenStack L3 Service (neutron-l3-agent) configuration file
 </longdesc>
 <shortdesc lang="en">OpenStack Router (neutron-l3-agent) config file</shortdesc>
 <content type="string" default="${OCF_RESKEY_plugin_config_default}" />
+</parameter>
+
+<parameter name="fwaas_driver_config" unique="0" required="0">
+<longdesc lang="en">
+Location of the OpenStack L3 Service (neutron-l3-agent) Firewall-as-a-Service driver configuration file
+</longdesc>
+<shortdesc lang="en">OpenStack Router (neutron-l3-agent) FWaaS driver config file</shortdesc>
+<content type="string" default="${OCF_RESKEY_fwaas_driver_config_default}" />
 </parameter>
 
 <parameter name="user" unique="0" required="0">
@@ -461,8 +483,9 @@ neutron_l3_agent_start() {
 
     # run and detach to background agent as daemon.
     # Don't use ocf_run as we're sending the tool's output to /dev/null
-    su ${OCF_RESKEY_user} -s /bin/sh -c "${OCF_RESKEY_binary} --config-file=$OCF_RESKEY_config \
-        --config-file=$OCF_RESKEY_plugin_config --log-file=$OCF_RESKEY_log_file $OCF_RESKEY_additional_parameters \
+    su ${OCF_RESKEY_user} -s /bin/sh -c "${OCF_RESKEY_binary} --config-file $OCF_RESKEY_dist_config \
+        --config-file $OCF_RESKEY_config --config-file $OCF_RESKEY_plugin_config \
+        --config-file $OCF_RESKEY_fwaas_driver_config --log-file $OCF_RESKEY_log_file $OCF_RESKEY_additional_parameters \
         >> /dev/null 2>&1 & echo \$! > $OCF_RESKEY_pid"
     ocf_log debug "Create pid file: ${OCF_RESKEY_pid} with content $(cat ${OCF_RESKEY_pid})"
 
