@@ -115,6 +115,11 @@ class openstack::cinder(
     }
   }
 
+  ####### Set all cinder host to 'cinder' #######
+  cinder_config {
+    'DEFAULT/host':   value => 'cinder';
+  }
+
   if ($bind_host) {
     class { 'cinder::api':
       keystone_enabled   => $keystone_enabled,
