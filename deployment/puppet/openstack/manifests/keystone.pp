@@ -380,6 +380,25 @@ class openstack::keystone (
       }
       Exec <| title == 'keystone-manage db_sync' |> -> Class['ceilometer::keystone::auth']
     }
+    if $token_driver == 'keystone.token.backends.sql.Token' {
+      package { 'crontabs':
+        ensure => latest,
+      }
+      service { 'crond':
+        ensure => running,
+        enable => true,
+      }
+
+      # Flush expired tokens
+      cron { 'keystone-flush-token':
+        ensure      => present,
+        command     => 'keystone-manage token_flush',
+        environment => 'PATH=/bin:/usr/bin:/usr/sbin',
+        user        => 'root',
+        hour        => '1',
+        require     => Package['crontabs'],
+      }
+    }
   }
 
 }
