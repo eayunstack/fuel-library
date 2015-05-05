@@ -254,7 +254,9 @@ class openstack::keystone (
     keystone_config {
       'token/caching':                      value => 'false';
       'cache/enabled':                      value => 'true';
-      'cache/backend':                      value => 'keystone.cache.memcache_pool';
+      # FIXME: keystone do not know when a memcache down, which leds to a timeout of 3 senonds every query,
+      # do not enable cache to fix it
+      'cache/backend':                      value => 'keystone.common.cache.noop';
       'cache/memcache_servers':             value => join($memcache_servers_real, ',');
       'cache/memcache_dead_retry':          value => '300';
       'cache/memcache_socket_timeout':      value => '3';
