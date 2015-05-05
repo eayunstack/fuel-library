@@ -207,7 +207,8 @@ class openstack::keystone (
 
   if $memcache_servers {
     $memcache_servers_real = suffix($memcache_servers, inline_template(":<%= @memcache_server_port %>"))
-    $token_driver = 'keystone.token.backends.memcache.Token'
+    # FIXME: keystone do not know when, which leds to a timeout of 3 senonds every query token, use sql backend to workround
+    $token_driver = 'keystone.token.backends.sql.Token'
   } else {
     $memcache_servers_real = false
     $token_driver = 'keystone.token.backends.sql.Token'
