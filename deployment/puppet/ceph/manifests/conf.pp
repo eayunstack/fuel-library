@@ -3,7 +3,7 @@ class ceph::conf {
   if $::hostname == $::ceph::primary_mon {
 
     exec {'ceph-deploy new':
-      command   => "ceph-deploy new ${::hostname}:${::internal_address}",
+      command   => "ceph-deploy new ${::hostname}:${::storage_address}",
       cwd       => '/etc/ceph',
       logoutput => true,
       creates   => '/etc/ceph/ceph.conf',

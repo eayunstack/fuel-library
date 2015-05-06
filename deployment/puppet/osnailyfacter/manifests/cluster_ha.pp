@@ -272,10 +272,10 @@ class osnailyfacter::cluster_ha {
 
     if ($::use_neutron) {
       $ceph_cluster_network = get_network_role_property('storage', 'cidr')
-      $ceph_public_network  = get_network_role_property('management', 'cidr')
+      $ceph_public_network  = get_network_role_property('storage', 'cidr')
     } else {
       $ceph_cluster_network = $::fuel_settings['storage_network_range']
-      $ceph_public_network = $::fuel_settings['management_network_range']
+      $ceph_public_network = $::fuel_settings['storage_network_range']
     }
 
     class {'ceph':
