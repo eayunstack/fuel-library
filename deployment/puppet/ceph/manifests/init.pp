@@ -9,7 +9,7 @@ class ceph (
                                                'name'),
       $mon_ip_addresses     = nodes_with_roles($::fuel_settings['nodes'],
                                                ['primary-controller', 'controller', 'ceph-mon'],
-                                               'internal_address'),
+                                               'storage_address'),
       $osd_devices          = split($::osd_devices_list, ' '),
       $use_ssl              = false,
       $use_rgw              = false,

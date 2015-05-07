@@ -12,9 +12,9 @@ class ceph::mon (
   }
 
   exec {'ceph-deploy mon create':
-    command   => "ceph-deploy --overwrite-conf mon create ${::hostname}:${::internal_address}",
+    command   => "ceph-deploy --overwrite-conf mon create ${::hostname}:${::storage_address}",
     logoutput => true,
-    unless    => "ceph mon stat | grep ${::internal_address}",
+    unless    => "ceph mon stat | grep ${::storage_address}",
   }
 
   exec {'Wait for Ceph quorum':

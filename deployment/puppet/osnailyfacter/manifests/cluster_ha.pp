@@ -271,11 +271,12 @@ class osnailyfacter::cluster_ha {
     $primary_mon    = $controllers[0]['name']
 
     if ($::use_neutron) {
-      $ceph_cluster_network = get_network_role_property('storage', 'cidr')
-      $ceph_public_network  = get_network_role_property('management', 'cidr')
+      $tmp_ceph_cluster_network = get_network_role_property('ceph_cluster', 'cidr')
+      $ceph_public_network  = get_network_role_property('storage', 'cidr')
+      $ceph_cluster_network = $tmp_ceph_cluster_network || $ceph_public_network
     } else {
-      $ceph_cluster_network = $::fuel_settings['storage_network_range']
-      $ceph_public_network = $::fuel_settings['management_network_range']
+      $ceph_public_network = $::fuel_settings['storage_network_range']
+      $ceph_cluster_network = $::fuel_settings['ceph_cluster_network_range'] || $ceph_public_network
     }
 
     class {'ceph':
