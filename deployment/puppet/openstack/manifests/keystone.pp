@@ -207,7 +207,8 @@ class openstack::keystone (
 
   if $memcache_servers {
     $memcache_servers_real = suffix($memcache_servers, inline_template(":<%= @memcache_server_port %>"))
-    $token_driver = 'keystone.token.backends.memcache.Token'
+    # FIXME: keystone do not know when, which leds to a timeout of 3 senonds every query token, use sql backend to workround
+    $token_driver = 'keystone.token.backends.sql.Token'
   } else {
     $memcache_servers_real = false
     $token_driver = 'keystone.token.backends.sql.Token'
@@ -253,7 +254,9 @@ class openstack::keystone (
     keystone_config {
       'token/caching':                      value => 'false';
       'cache/enabled':                      value => 'true';
-      'cache/backend':                      value => 'keystone.cache.memcache_pool';
+      # FIXME: keystone do not know when a memcache down, which leds to a timeout of 3 senonds every query,
+      # do not enable cache to fix it
+      'cache/backend':                      value => 'keystone.common.cache.noop';
       'cache/memcache_servers':             value => join($memcache_servers_real, ',');
       'cache/memcache_dead_retry':          value => '300';
       'cache/memcache_socket_timeout':      value => '3';
@@ -376,6 +379,25 @@ class openstack::keystone (
         internal_address => $ceilometer_internal_real,
       }
       Exec <| title == 'keystone-manage db_sync' |> -> Class['ceilometer::keystone::auth']
+    }
+    if $token_driver == 'keystone.token.backends.sql.Token' {
+      package { 'crontabs':
+        ensure => latest,
+      }
+      service { 'crond':
+        ensure => running,
+        enable => true,
+      }
+
+      # Flush expired tokens
+      cron { 'keystone-flush-token':
+        ensure      => present,
+        command     => 'keystone-manage token_flush',
+        environment => 'PATH=/bin:/usr/bin:/usr/sbin',
+        user        => 'root',
+        hour        => '1',
+        require     => Package['crontabs'],
+      }
     }
   }
 
