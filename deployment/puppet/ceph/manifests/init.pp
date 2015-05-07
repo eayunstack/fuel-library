@@ -54,6 +54,8 @@ class ceph (
       $glance_api_version = '2',
       $cinder_user        = 'volumes',
       $cinder_pool        = 'volumes',
+      $cinder_backup_user        = 'volumes-backup',
+      $cinder_backup_pool        = 'volumes-backup',
       # TODO: generate rbd_secret_uuid
       $rbd_secret_uuid    = 'a5d0dd94-57c4-ae55-ffe0-7e3732a24455',
 
@@ -118,8 +120,14 @@ class ceph (
         keyring_owner => 'cinder',
       }
 
+      ceph::pool {$cinder_backup_pool:
+        user          => $cinder_backup_user,
+        acl           => "mon 'allow r' osd 'allow class-read object_prefix rbd_children, allow rwx pool=${cinder_backup_pool}'",
+        keyring_owner => 'cinder',
+      }
+
       Class['ceph::conf'] -> Class['ceph::mon'] ->
-      Ceph::Pool[$glance_pool] -> Ceph::Pool[$cinder_pool] ->
+      Ceph::Pool[$glance_pool] -> Ceph::Pool[$cinder_pool] -> Ceph::Pool[$cinder_backup_pool] ->
       Service['ceph']
 
       if ($::ceph::use_rgw) {
