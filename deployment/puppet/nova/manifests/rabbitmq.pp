@@ -130,33 +130,15 @@ class nova::rabbitmq(
           ensure          => present,
           #cib             => 'rabbitmq',
           primitive_class => 'ocf',
-          provided_by     => 'mirantis',
-          primitive_type  => 'rabbitmq-server',
+          provided_by     => 'heartbeat',
+          primitive_type  => 'rabbitmq-cluster',
           parameters      => {
-            'node_port'       => $port,
-            'command_timeout' => $command_timeout
+            'set_policy'       => "\'ha-all \".\" {\"ha-mode\":\"all\",\"ha-sync-mode\":\"automatic\"}\'"
           },
-          metadata                 => {
-            'migration-threshold' => 'INFINITY',
-            'failure-timeout'     => '180s'
-          },
-          complex_type => 'master',
-          ms_metadata => {
-            'notify'      => 'true',
-            'ordered'     => 'false', # We shouldn't enable ordered start for parallel start of RA.
-            'interleave'  => 'true',
-            'master-max'  => '1',
-            'master-node-max' => '1',
-            'target-role' => 'Master'
-          },
+          complex_type => 'clone',
           operations => {
             'monitor' => {
               'interval' => '30',
-              'timeout'  => '60'
-            },
-            'monitor:Master' => { # name:role
-              'role' => 'Master',
-              'interval' => '27', # should be non-intercectable with interval from ordinary monitor
               'timeout'  => '60'
             },
             'start' => {
@@ -164,15 +146,6 @@ class nova::rabbitmq(
             },
             'stop' => {
               'timeout' => '60'
-            },
-            'promote' => {
-              'timeout' => '120'
-            },
-            'demote' => {
-              'timeout' => '60'
-            },
-            'notify' => {
-              'timeout' => '180'
             },
           },
         }
