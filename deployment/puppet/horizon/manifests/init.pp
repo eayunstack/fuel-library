@@ -62,6 +62,11 @@ class horizon(
     require => Package[$::horizon::params::http_service],
   }
 
+  package { 'eayunstack-dashboard-theme':
+    ensure  => present,
+    require =>  Package['dashboard'],
+  }
+
   define horizon_safe_package(){
     if ! defined(Package[$name]){
       @package { $name : }
