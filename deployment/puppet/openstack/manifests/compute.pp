@@ -220,6 +220,8 @@ class openstack::compute (
       'set listen_tls 0',
       'set listen_tcp 1',
       'set auth_tcp none',
+      'set log_level 2',
+      'set log_outputs "2:file:/var/log/libvirt/libvirtd.log"',
     ],
     notify  => Service['libvirt'],
   }
