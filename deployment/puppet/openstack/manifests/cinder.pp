@@ -152,6 +152,10 @@ class openstack::cinder(
       package_ensure => $::openstack_version['cinder'],
       enabled        => true,
     }
+
+    class { 'cinder::backup':
+      enabled       => false,
+    }
     case $manage_volumes {
       true, 'iscsi': {
         if ($physical_volume) {
@@ -187,6 +191,12 @@ class openstack::cinder(
         }
         class {'cinder::backends':
           enabled_backends    => ['cinder_ceph'],
+        }
+
+        Ceph::Pool<| title == $::ceph::cinder_backup_pool |> ->
+        class {'cinder::backup::ceph':
+          backup_ceph_user    => $::ceph::cinder_backup_user,
+          backup_ceph_pool    => $::ceph::cinder_backup_pool,
         }
       }
     }
