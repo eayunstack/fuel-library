@@ -62,7 +62,7 @@ if [ $PROBED_PORT_NAME != $ISER_NAME ]; then
   #Prepare line for udev
   UDEV_LINE="SUBSYSTEM==\"net\", ACTION==\"add\", "
   UDEV_LINE+="ATTR{dev_id}==\"$STORAGE_PORT_NUMBER\", KERNELS==\"$SON_BUS\", "
-  UDEV_LINE+="ATTR{type}==\"1\", KERNEL==\"eth*\", NAME=\"$ISER_NAME\""
+  UDEV_LINE+="ATTR{type}==\"1\", NAME=\"$ISER_NAME\""
 
   # Change/add line in udev file
   grep $PROBED_PORT_NAME $UDEV_FILE > /dev/null 2>&1
