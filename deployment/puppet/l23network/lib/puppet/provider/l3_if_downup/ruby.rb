@@ -144,7 +144,7 @@ Puppet::Type.type(:l3_if_downup).provide(:ruby) do
       end
       notice("Interface '#{@resource[:interface]}' up.")
       # checking and waiting carrier for PHYS. interface
-      if (@resource[:interface] =~ /^eth\d+$/) and @resource[:wait_carrier_after_ifup] and poll_for_carrier
+      if (@resource[:interface] =~ /^eth\d+$|^en[[:alnum:]]+$/) and @resource[:wait_carrier_after_ifup] and poll_for_carrier
         begin
           Timeout::timeout(@resource[:wait_carrier_after_ifup_timeout]) do
             _w = 10

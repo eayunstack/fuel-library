@@ -263,6 +263,11 @@ define l23network::l3::ifconfig (
       $vlan_id   = $2
       $vlan_dev  = $1
     }
+    /^(en[[:alnum:]]+)\.(\d+)/: { # TODO: bond0.123 -- also vlan
+      $vlan_mode = 'eth'
+      $vlan_id   = $2
+      $vlan_dev  = $1
+    }
     /^(bond\d+)/: {
       if ! $actual_bond_properties[mode] {
         fail('To configure the interface bonding you should the mode properties for bond is required and must be between 0..6.')
