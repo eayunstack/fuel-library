@@ -168,7 +168,7 @@ class nailgun::cobbler(
         distro => "bootstrap",
         menu => true,
         kickstart => "",
-        kopts => "biosdevname=0 net.ifnames=0 url=http://${::fuel_settings['ADMIN_NETWORK']['ipaddress']}:8000/api mco_user=${mco_user} mco_pass=${mco_pass}",
+        kopts => "biosdevname=0 url=http://${::fuel_settings['ADMIN_NETWORK']['ipaddress']}:8000/api mco_user=${mco_user} mco_pass=${mco_pass}",
         ksmeta => "",
         server => $real_server,
         require => Cobbler_distro["bootstrap"],
