@@ -183,7 +183,7 @@ class cobbler::server (
     service { $cobbler_web_service:
       ensure     => running,
       hasstatus  => false,
-      start      => '/usr/sbin/httpd',
+      start      => 'rm -f /var/run/httpd/httpd.pid; rm -f /var/run/httpd/authdigest_shm.*; /usr/sbin/httpd',
       binary     => '/usr/sbin/httpd',
       provider   => 'base',
       require    => Package[$cobbler::packages::cobbler_web_package],
