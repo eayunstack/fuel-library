@@ -359,6 +359,17 @@ define l23network::l3::ifconfig (
       content => template("l23network/ipconfig_${::osfamily}_ifdn-script.erb"),
     } ->
     File <| title == $interface_file |>
+
+    if $interface =~ /^br-/ {
+      file {"${if_files_dir}/interface-pre-up-script-${interface}":
+        ensure => present,
+        owner => 'root',
+        mode => '0755',
+        recurse => 'true',
+        content => template("l23network/ipconfig_${::osfamily}_ifup-pre-script.erb"),
+      } ->
+      File <| title == $interface_file |>
+    }
   }
 
   file {"${interface_file}":
