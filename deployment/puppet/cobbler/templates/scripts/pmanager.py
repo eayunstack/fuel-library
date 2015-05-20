@@ -419,7 +419,7 @@ class PManager(object):
                                   lv["mount"], vg["id"], size,
                                   lv["name"], fstype))
                 else:
-                    self.post("lvcreate --size {0} --name {1} {2}".format(
+                    self.post("lvcreate -y --size {0} --name {1} {2}".format(
                         size, lv["name"], vg["id"]))
                     if lv["mount"] != "swap" and tabfstype != "none":
                         self.post("mkfs.{0} {1} /dev/mapper/{2}-{3}".format(
