@@ -16,7 +16,7 @@ Facter.add(:l2_ovs_vlan_splinters_need_for) do
   ]
   interfaces = Facter.value(:interfaces)
   if need and interfaces
-    for dev in interfaces.split(',').select{|x| x=~/^eth/} do
+    for dev in interfaces.split(',').select{|x| x=~/^eth|^en/} do
       basedir = "/sys/class/net/#{dev}"
       if ! (File.exists?(basedir) and File.exists?("#{basedir}/device/") and File.exists?("#{basedir}/device/uevent"))
         next
