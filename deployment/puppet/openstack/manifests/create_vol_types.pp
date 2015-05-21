@@ -36,7 +36,7 @@ class openstack::create_vol_types(
         path        => '/usr/bin',
         command     => 'cinder --retries 10 type-list',
         tries       => 10,
-        try_sleep   => 1,
+        try_sleep   => 10,
         timeout     => 600,
         environment => [
           "OS_TENANT_NAME=${os_tenant_name}",
