@@ -484,7 +484,7 @@ class openstack::controller (
           set_type  => 'rbd',
           set_key   => 'volume_backend_name',
           set_value => 'cinder_ceph',
-          require   => [Class['openstack::cinder'], Class['cinder::keystone::auth']]
+          ha_mode   =>  $ha_mode,
         }
       } # end volumes-ceph
 

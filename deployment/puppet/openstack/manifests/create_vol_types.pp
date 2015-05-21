@@ -17,13 +17,19 @@ class openstack::create_vol_types(
   $set_type,
   $set_key,
   $set_value,
+  $ha_mode,
 ) {
     $os_username = $::fuel_settings['access']['user']
     $os_password = $::fuel_settings['access']['password']
     $os_tenant_name = $::fuel_settings['access']['tenant']
     $os_auth_url = "http://${::fuel_settings['management_vip']}:5000/v2.0/"
 
-    $primary_controller = $::fuel_settings['role'] ? { 'primary-controller'=>true, default=>false }
+    if $ha_mode {
+      $primary_controller = $::fuel_settings['role'] ? { 'primary-controller'=>true, default=>false }
+    }
+    else {
+      $primary_controller = true
+    }
 
     if $primary_controller {
       exec {"waiting for cinder service":
@@ -38,7 +44,11 @@ class openstack::create_vol_types(
           "OS_PASSWORD=${os_password}",
           "OS_AUTH_URL=${os_auth_url}",
         ],
-        require     => Package['python-cinderclient']
+        require     => [
+                        Package['python-cinderclient'],
+                        Class['openstack::cinder'],
+                        Class['cinder::keystone::auth'],
+                        ],
       } ->
       cinder::type { $set_type:
         os_username     => $os_username,
@@ -47,6 +57,11 @@ class openstack::create_vol_types(
         os_auth_url     => $os_auth_url,
         set_key         => $set_key,
         set_value       => $set_value,
+      }
+
+      if $ha_mode {
+         Exec['haproxy reload for cinder-api'] ->
+          Exec['waiting for cinder service']
       }
     }
   }
