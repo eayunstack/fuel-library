@@ -3,7 +3,7 @@
 class glance::params {
 
   $client_package_name = 'python-glanceclient'
-  $pyceph_package_name = 'python-ceph'
+  $pyceph_package_name = 'python-ceph-compat'
 
   $cache_cleaner_command = 'glance-cache-cleaner'
   $cache_pruner_command  = 'glance-cache-pruner'
