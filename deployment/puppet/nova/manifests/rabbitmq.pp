@@ -89,6 +89,12 @@ class nova::rabbitmq(
     $service_name     = 'rabbitmq-server'
   }
 
+  if ($ha_mode) {
+    $real_port = '5673'
+  } else {
+    $real_port = $port
+  }
+
   if ($ha_mode and ! $primary_controller) {
     $real_delete_guest_user = false
   } else {
@@ -101,7 +107,7 @@ class nova::rabbitmq(
       service_ensure           => $service_ensure,
       service_provider         => $service_provider,
       service_enabled          => $service_enabled,
-      port                     => $port,
+      port                     => $real_port,
       delete_guest_user        => $real_delete_guest_user,
       config_cluster           => $cluster,
       cluster_disk_nodes       => $cluster_disk_nodes,
@@ -169,7 +175,7 @@ class nova::rabbitmq(
   } else {
     class { $rabbitmq_class:
       service_ensure    => $service_ensure,
-      port              => $port,
+      port              => $real_port,
       delete_guest_user => $delete_guest_user,
       config_cluster    => false,
       version           => $::openstack_version['rabbitmq_version'],
