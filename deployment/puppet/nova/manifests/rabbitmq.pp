@@ -89,12 +89,6 @@ class nova::rabbitmq(
     $service_name     = 'rabbitmq-server'
   }
 
-  if ($ha_mode) {
-      $rabbitmq_config = template("rabbitmq/rabbitmq.config")
-  } else {
-      $rabbitmq_config = 'UNSET'
-  }
-
   if ($ha_mode and ! $primary_controller) {
     $real_delete_guest_user = false
   } else {
@@ -114,7 +108,6 @@ class nova::rabbitmq(
       wipe_db_on_cookie_change => true,
       version                  => $::openstack_version['rabbitmq_version'],
       node_ip_address          => $rabbit_node_ip_address,
-      config                   => $rabbitmq_config,
     }
 
     if ($ha_mode) {
