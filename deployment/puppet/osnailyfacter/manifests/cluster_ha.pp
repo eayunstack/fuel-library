@@ -211,6 +211,7 @@ class osnailyfacter::cluster_ha {
   $controller_storage_addresses = nodes_to_hash($controllers,'name','storage_address')
   $controller_hostnames = keys($controller_internal_addresses)
   $controller_nodes = ipsort(values($controller_internal_addresses))
+  $corosync_nodes = corosync_nodes($controllers)
   $controller_node_public  = $::fuel_settings['public_vip']
   $controller_node_address = $::fuel_settings['management_vip']
   $roles = node_roles($nodes_hash, $::fuel_settings['uid'])
@@ -490,8 +491,14 @@ class osnailyfacter::cluster_ha {
       class { '::cluster':
         stage             => 'corosync_setup',
         internal_address  => $::internal_address,
-        unicast_addresses => $::osnailyfacter::cluster_ha::controller_nodes,
+        unicast_addresses => ipsort(values($corosync_nodes)),
       }
+
+      pcmk_nodes { 'pacemaker' :
+        nodes => $corosync_nodes,
+      }
+
+      Pcmk_nodes<||> -> Service<| provider == 'pacemaker' |>
 
       Class['::cluster']->
       class { 'virtual_ips' :
