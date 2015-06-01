@@ -470,6 +470,13 @@ class osnailyfacter::cluster_ha {
     } # End If keep_vips_together
   }
 
+  class pcmk_nodes_wrapper () {
+    pcmk_nodes { 'pacemaker' :
+      nodes => $::osnailyfacter::cluster_ha::corosync_nodes,
+      add_pacemaker_nodes => false,
+    }
+  }
+
   if $use_vmware_nsx {
     class { 'plugin_neutronnsx':
       neutron_config     => $neutron_config,
@@ -494,9 +501,8 @@ class osnailyfacter::cluster_ha {
         corosync_nodes   => $corosync_nodes,
       }
 
-      pcmk_nodes { 'pacemaker' :
-        nodes => $corosync_nodes,
-        add_pacemaker_nodes => false,
+      class { 'pcmk_nodes_wrapper' :
+        stage => 'corosync_setup',
       }
 
       Service <| title == 'corosync' |> {
