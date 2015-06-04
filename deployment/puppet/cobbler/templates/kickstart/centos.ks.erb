@@ -176,6 +176,9 @@ $SNIPPET('mcollective_install_if_enabled')
 # INSTALLATION ITSELF COMPLETED
 %post
 
+# disable ctrl-alt-del
+systemctl mask ctrl-alt-del.target
+
 yum-config-manager --disableplugin=fastestmirror --save &>/dev/null
 
 echo -e "modprobe nf_conntrack_ipv4\nmodprobe nf_conntrack_ipv6" >> /etc/rc.modules
