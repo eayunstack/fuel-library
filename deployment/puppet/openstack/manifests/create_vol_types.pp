@@ -62,6 +62,12 @@ class openstack::create_vol_types(
       if $ha_mode {
          Exec['haproxy reload for cinder-api'] ->
           Exec['waiting for cinder service']
+         Openstack::Ha::Haproxy_service[cinder-api] ->
+          Exec['waiting for cinder service']
+         Class[Openstack::Ha::Cinder] ->
+          Exec['waiting for cinder service']
+         Class[Cinder::Scheduler] ->
+          Exec['waiting for cinder service']
       }
     }
   }

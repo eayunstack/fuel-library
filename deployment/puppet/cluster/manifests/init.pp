@@ -4,7 +4,7 @@
 #
 class cluster (
     $internal_address  = '127.0.0.1',
-    $unicast_addresses = undef,
+    $corosync_nodes    = undef,
 ) {
 
     #todo: move half of openstack::corosync
@@ -26,7 +26,7 @@ class cluster (
     if defined(Stage['corosync_setup']) {
       class { 'openstack::corosync':
         bind_address      => $internal_address,
-        unicast_addresses => $unicast_addresses,
+        corosync_nodes    => $corosync_nodes,
         stage             => 'corosync_setup',
         corosync_version  => '2',
         packages          => ['corosync', 'pacemaker', 'crmsh', $pcs_package],
@@ -34,18 +34,13 @@ class cluster (
     } else {
       class { 'openstack::corosync':
         bind_address      => $internal_address,
-        unicast_addresses => $unicast_addresses,
+        corosync_nodes    => $corosync_nodes,
         corosync_version  => '2',
         packages          => ['corosync', 'pacemaker', 'crmsh', $pcs_package],
       }
     }
 
-    # NOTE(bogdando) dirty hack to make corosync with pacemaker service ver:1 working #1417972
-    exec { 'stop-pacemaker':
-      command     => 'service pacemaker stop || true',
-      path        => '/bin:/usr/bin/:/sbin:/usr/sbin',
-    }
-    File<| title == '/etc/corosync/corosync.conf' |> ~> Exec['stop-pacemaker'] ~> Service['corosync']
+    File<| title == '/etc/corosync/corosync.conf' |> -> Service['corosync']
 
     file { 'ocf-mirantis-path':
       ensure  => directory,

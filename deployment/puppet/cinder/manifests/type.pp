@@ -49,6 +49,7 @@ define cinder::type (
       "OS_PASSWORD=${os_password}",
       "OS_AUTH_URL=${os_auth_url}",
     ],
+    unless      => "cinder type-list | grep ${volume_name}",
     require     => Package['python-cinderclient']
   }
 

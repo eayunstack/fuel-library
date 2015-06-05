@@ -211,6 +211,7 @@ class osnailyfacter::cluster_ha {
   $controller_storage_addresses = nodes_to_hash($controllers,'name','storage_address')
   $controller_hostnames = keys($controller_internal_addresses)
   $controller_nodes = ipsort(values($controller_internal_addresses))
+  $corosync_nodes = corosync_nodes($controllers)
   $controller_node_public  = $::fuel_settings['public_vip']
   $controller_node_address = $::fuel_settings['management_vip']
   $roles = node_roles($nodes_hash, $::fuel_settings['uid'])
@@ -469,6 +470,13 @@ class osnailyfacter::cluster_ha {
     } # End If keep_vips_together
   }
 
+  class pcmk_nodes_wrapper () {
+    pcmk_nodes { 'pacemaker' :
+      nodes => $::osnailyfacter::cluster_ha::corosync_nodes,
+      add_pacemaker_nodes => false,
+    }
+  }
+
   if $use_vmware_nsx {
     class { 'plugin_neutronnsx':
       neutron_config     => $neutron_config,
@@ -490,8 +498,20 @@ class osnailyfacter::cluster_ha {
       class { '::cluster':
         stage             => 'corosync_setup',
         internal_address  => $::internal_address,
-        unicast_addresses => $::osnailyfacter::cluster_ha::controller_nodes,
+        corosync_nodes   => $corosync_nodes,
       }
+
+      class { 'pcmk_nodes_wrapper' :
+        stage => 'corosync_setup',
+      }
+
+      Service <| title == 'corosync' |> {
+        subscribe => File['/etc/corosync/service.d'],
+        require   => File['/etc/corosync/corosync.conf'],
+      }
+
+      Service['corosync'] -> Pcmk_nodes<||>
+      Pcmk_nodes<||> -> Service<| provider == 'pacemaker' |>
 
       Class['::cluster']->
       class { 'virtual_ips' :
