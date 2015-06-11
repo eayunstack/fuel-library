@@ -136,6 +136,9 @@ class openstack::glance (
     'DEFAULT/image_cache_max_size':                   value => $glance_image_cache_max_size;
   }
 
+  class { "glance::cache::pruner": }
+  class { "glance::cache::cleaner": }
+
   # Install and configure glance-registry
   class { 'glance::registry':
     verbose             => $verbose,
