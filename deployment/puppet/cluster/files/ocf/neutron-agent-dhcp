@@ -501,7 +501,8 @@ neutron_dhcp_agent_stop() {
     if [ -n "$OCF_RESKEY_CRM_meta_timeout" ]; then
         shutdown_timeout=$((($OCF_RESKEY_CRM_meta_timeout/1000)-6))
     fi
-    all_inside_ns_pids=`get_pid_list_for_ns_list $(get_ns_list)`
+    ns_list=`get_ns_list`
+    all_inside_ns_pids=`get_pid_list_for_ns_list "$ns_list"`
     all_pids="$pid $all_inside_ns_pids"
     count=0
     alive=1
