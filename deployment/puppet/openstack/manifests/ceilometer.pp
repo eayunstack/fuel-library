@@ -107,10 +107,6 @@ class openstack::ceilometer (
 
     class { '::ceilometer::agent::notification': }
 
-    if $use_neutron {
-      neutron_config { 'DEFAULT/notification_driver': value => 'messaging' }
-    }
-
     if $ha_mode {
       include ceilometer_ha::agent::central
 
