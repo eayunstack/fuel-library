@@ -64,11 +64,13 @@ class NeutronCleaner(object):
     NS_NAME_PREFIXES = {
         'dhcp': 'qdhcp',
         'l3':   'qrouter',
+        'lbaas': 'qlbaas'
     }
     AGENT_BINARY_NAME = {
         'dhcp': 'neutron-dhcp-agent',
         'l3':   'neutron-l3-agent',
-        'ovs':  'neutron-openvswitch-agent'
+        'ovs':  'neutron-openvswitch-agent',
+        'lbaas':  'neutron-lbaas-agent'
     }
 
     CMD__list_ovs_port = ['ovs-vsctl', 'list-ports']
@@ -88,6 +90,7 @@ class NeutronCleaner(object):
         self.RESCHEDULING_CALLS = {
             'dhcp': self._reschedule_agent_dhcp,
             'l3':   self._reschedule_agent_l3,
+            'lbaas': self._reschedule_agent_lbaas
         }
 
         self._token = None
@@ -264,6 +267,12 @@ class NeutronCleaner(object):
 
     def _remove_router_from_l3_agent(self, agent_id, router_id):
         return self._neutron_API_call(self.client.remove_router_from_l3_agent, agent_id, router_id)
+
+    def _list_pools_on_lbaas_agent(self, agent_id):
+        return self._neutron_API_call(self.client.list_pools_on_lbaas_agent, agent_id)['pools']
+
+    def _add_pool_to_lbaas_agent(self, agent_id, pool_id):
+        return self._neutron_API_call(self.client.add_pool_to_lb_agent, agent_id, {"pool_id": pool_id})
 
     def _get_agents_by_type(self, agent, use_cache=True):
         self.log.debug("_get_agents_by_type: start.")
@@ -476,6 +485,52 @@ class NeutronCleaner(object):
                     self._add_router_to_l3_agent(agents['alive'][0]['id'], router)
         self.log.info("_reschedule_agent_l3: ended rescheduling of orphaned routers")
         self.log.debug("_reschedule_agent_l3: end.")
+
+    def _reschedule_agent_lbaas(self, agent_type):
+        self.log.debug("_reschedule_agent_lbaas: start.")
+        agents = {
+            'alive': [],
+            'dead':  []
+        }
+        # collect pool-list from dead Lbaas agent
+        dead_pools = []  # array of tuples (pool, agentID)
+        for agent in self._get_agents_by_type(agent_type):
+            if agent['alive']:
+                self.log.info("found alive Lbaas agent: {0}".format(agent['id']))
+                agents['alive'].append(agent)
+            else:
+                # dead agent
+                self.log.info("found dead Lbaas agent: {0}".format(agent['id']))
+                agents['dead'].append(agent)
+                map(
+                    lambda pool: dead_pools.append((pool, agent['id'])),
+                    self._list_pools_on_lbaas_agent(agent['id'])
+                )
+        self.log.debug("Lbaas agents in cluster: {ags}".format(ags=json.dumps(agents, indent=4)))
+        self.log.debug("Pools, attached to dead Lbaas agents: {pool}".format(pool=json.dumps(dead_pools, indent=4)))
+
+        if dead_pools and agents['alive']:
+            # get pool-ID list of already attached to alive agent lbaas
+            lucky_ids = set()
+            map(
+                lambda pool: lucky_ids.add(pool['id']),
+                self._list_pools_on_lbaas_agent(agents['alive'][0]['id'])
+            )
+            # remove dead agents after rescheduling
+            for agent in agents['dead']:
+                self.log.info("remove dead Lbaas agent: {0}".format(agent['id']))
+                if not self.options.get('noop'):
+                    self._neutron_API_call(self.client.delete_agent, agent['id'])
+            # move lbaas pool from dead to alive agent
+            for pool in filter(lambda pool: not(pool[0]['id'] in lucky_ids), dead_pools):
+                self.log.info("schedule pool {pool} to Lbaas agent {agent}".format(
+                    pool=pool[0]['id'],
+                    agent=agents['alive'][0]['id']
+                ))
+                if not self.options.get('noop'):
+                    self._add_pool_to_lbaas_agent(agents['alive'][0]['id'], pool[0]['id'])
+
+        self.log.debug("_reschedule_agent_lbaas: end.")
 
     def _remove_self(self,agent_type):
         self.log.debug("_remove_self: start.")
