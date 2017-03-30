@@ -123,6 +123,7 @@ class NeutronCleaner(object):
                 try:
                     a_token = self.options.get('auth-token')
                     a_url = self.options.get('admin-auth-url')
+                    region_name = self.options.get('region-name')
                     if a_token and a_url:
                         self.log.debug("Authentication by predefined token.")
                         # create keystone instance, authorized by service token
@@ -131,8 +132,13 @@ class NeutronCleaner(object):
                             endpoint=a_url,
                         )
                         service_tenant = ks.tenants.find(name='services')
+                        search_kws = {
+                                'service_id': ks.services.find(type='identity').id,
+                        }
+                        if region_name:
+                            search_kws['region'] = region_name
                         auth_url = ks.endpoints.find(
-                                        service_id=ks.services.find(type='identity').id
+                                       **search_kws
                                    ).internalurl
                         # find and re-create temporary rescheduling-admin user with random password
                         try:
@@ -585,6 +591,8 @@ if __name__ == '__main__':
                       help="Authenticating token (instead username/passwd)", metavar="TOKEN")
     parser.add_argument("-u", "--admin-auth-url", dest="admin-auth-url", default=None,
                       help="Authenticating URL (admin)", metavar="URL")
+    parser.add_argument("-r", "--region-name", dest="region-name", default=None,
+                      help="Name of a region to select", metavar="REN")
     parser.add_argument("--retries", dest="retries", type=int, default=50,
                       help="try NN retries for API call", metavar="NN")
     parser.add_argument("--sleep", dest="sleep", type=int, default=2,

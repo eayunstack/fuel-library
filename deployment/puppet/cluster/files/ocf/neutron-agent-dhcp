@@ -43,6 +43,7 @@ OCF_RESKEY_user_default="neutron"
 OCF_RESKEY_pid_default="${HA_RSCTMP}/${__SCRIPT_NAME}/${__SCRIPT_NAME}.pid"
 OCF_RESKEY_amqp_server_port_default="5672" # or "none" for disable checking
 OCF_RESKEY_os_auth_url_default="http://localhost:5000/v2.0"
+OCF_RESKEY_region_name_default=""
 OCF_RESKEY_username_default="neutron"
 OCF_RESKEY_password_default="neutron_pass"
 OCF_RESKEY_tenant_default="services"
@@ -53,6 +54,7 @@ OCF_RESKEY_debug_default='false'
 
 
 : ${OCF_RESKEY_os_auth_url=${OCF_RESKEY_os_auth_url_default}}
+: ${OCF_RESKEY_region_name=${OCF_RESKEY_region_name_default}}
 : ${OCF_RESKEY_username=${OCF_RESKEY_username_default}}
 : ${OCF_RESKEY_password=${OCF_RESKEY_password_default}}
 : ${OCF_RESKEY_tenant=${OCF_RESKEY_tenant_default}}
@@ -202,6 +204,14 @@ URL of keystone
 <content type="string" default="${OCF_RESKEY_os_auth_url_default}" />
 </parameter>
 
+<parameter name="region_name" unique="0" required="0">
+<longdesc lang="en">
+Name of a region to select
+</longdesc>
+<shortdesc lang="en">Region Name</shortdesc>
+<content type="string" default="${OCF_RESKEY_region_name_default}" />
+</parameter>
+
 <parameter name="tenant" unique="0" required="0">
 <longdesc lang="en">
 Admin tenant name
@@ -304,6 +314,10 @@ setup_auth() {
     AUTH_TAIL=""
     if [[ -n "$AUTH_TOKEN" ]] ; then
         AUTH_TAIL="--admin-auth-url=${OCF_RESKEY_os_auth_url} --auth-token=${AUTH_TOKEN}"
+    fi
+
+    if [[ -n "$OCF_RESKEY_region_name" ]] ; then
+        AUTH_TAIL="$AUTH_TAIL --region-name=${OCF_RESKEY_region_name}"
     fi
 
     true
