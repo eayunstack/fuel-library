@@ -98,7 +98,13 @@ class openstack::nova::controller (
   $max_overflow                = '30',
   $max_retries                 = '-1',
   $novnc_address               = '127.0.0.1',
-  $neutron_metadata_proxy_shared_secret = undef
+  $neutron_metadata_proxy_shared_secret = undef,
+  $reclaim_instance_interval   = '864000',
+  # Cinder Admin Info
+  $cinder_admin_auth_url       = "http://${::fuel_settings['management_vip']}:35357/v2.0",
+  $cinder_admin_username       = 'cinder',
+  $cinder_admin_password       = $::fuel_settings['cinder']['user_password'],
+  $cinder_admin_tenant_name    = 'services'
 ) {
 
   # Configure the db string
@@ -293,6 +299,21 @@ class openstack::nova::controller (
     'DEFAULT/keystone_ec2_url':           value => "http://${keystone_host}:5000/v2.0/ec2tokens";
     'keystone_authtoken/signing_dir':     value => '/tmp/keystone-signing-nova';
     'keystone_authtoken/signing_dirname': value => '/tmp/keystone-signing-nova';
+  }
+
+  nova_config {
+    'cinder/admin_auth_url':              value => "${cinder_admin_auth_url}";
+    'cinder/admin_username':              value => "${cinder_admin_username}";
+    'cinder/admin_password':              value => "${cinder_admin_password}";
+    'cinder/admin_tenant_name':           value => "${cinder_admin_tenant_name}";
+  }
+
+  nova_config {
+    'DEFAULT/reclaim_instance_interval':  value => "${reclaim_instance_interval}";
+  }
+
+  nova_config {
+    'neutron/allow_duplicate_networks':   value => true;
   }
 
   nova_paste_api_ini {
