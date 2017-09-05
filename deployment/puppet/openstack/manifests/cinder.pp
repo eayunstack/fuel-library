@@ -39,6 +39,10 @@ class openstack::cinder(
   $vmware_host_ip         = '10.10.10.10',
   $vmware_host_username   = 'administrator@vsphere.local',
   $vmware_host_password   = 'password',
+  $nova_admin_username    = 'nova',
+  $nova_admin_password    = $::fuel_settings['nova']['user_password'],
+  $nova_admin_tenant_name = 'services',
+  $nova_admin_auth_url    = "http://${::fuel_settings['management_vip']}:35357/v2.0",
 ) {
   include cinder::params
   #  if ($purge_cinder_config) {
@@ -120,6 +124,14 @@ class openstack::cinder(
     'DEFAULT/host':   value => 'cinder';
   }
 
+  # Add Nova admin info
+  cinder_config {
+    'DEFAULT/os_privileged_user_name':     value => $nova_admin_username;
+    'DEFAULT/os_privileged_user_password': value => $nova_admin_password;
+    'DEFAULT/os_privileged_user_tenant':   value => $nova_admin_tenant_name;
+    'DEFAULT/os_privileged_user_auth_url': value => $nova_admin_auth_url;
+  }
+
   if ($bind_host) {
     class { 'cinder::api':
       keystone_enabled   => $keystone_enabled,
@@ -154,7 +166,7 @@ class openstack::cinder(
     }
 
     class { 'cinder::backup':
-      enabled       => false,
+      enabled       => true,
     }
     case $manage_volumes {
       true, 'iscsi': {
