@@ -38,9 +38,11 @@
 #
 
 class ceilometer::agent::notification (
-  $enabled            = true,
-  $ack_on_event_error = true,
-  $store_events       = false
+  $enabled              = true,
+  $ack_on_event_error   = true,
+  $store_events         = true,
+  $pipeline_cfg_file    = '/etc/ceilometer/pipeline.yaml',
+  $definitions_cfg_file = '/etc/ceilometer/event_definitions.yaml'
 ) {
 
   include ceilometer::params
@@ -68,6 +70,33 @@ class ceilometer::agent::notification (
   ceilometer_config {
     'notification/ack_on_event_error': value => $ack_on_event_error;
     'notification/store_events'      : value => $store_events;
+  }
+
+  file { 'pipeline.yaml':
+    ensure  => file,
+    path    => '/etc/ceilometer/pipeline.yaml',
+    source  => 'puppet:///modules/ceilometer/pipeline.yaml',
+    group   => 'ceilometer',
+    require => Package['ceilometer-common'],
+    notify  => [
+      Service['ceilometer-agent-notification'], Service['ceilometer-api'],
+      Service['httpd'], Service['ceilometer-agent-central'],
+      Service['ceilometer-agent-network'],
+    ],
+  }
+
+  file { 'event_definitions.yaml':
+    ensure  => file,
+    path    => '/etc/ceilometer/event_definitions.yaml',
+    source  => 'puppet:///modules/ceilometer/event_definitions.yaml',
+    group   => 'ceilometer',
+    require => Package['ceilometer-common'],
+    notify  => Service['ceilometer-agent-notification'],
+  }
+
+  ceilometer_config {
+    'DEFAULT/pipeline_cfg_file'      : value => $pipeline_cfg_file;
+    'event/definitions_cfg_file'     : value => $definitions_cfg_file;
   }
 
 }

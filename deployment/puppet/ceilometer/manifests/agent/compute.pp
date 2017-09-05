@@ -8,6 +8,7 @@
 #
 class ceilometer::agent::compute (
   $enabled          = true,
+  $pipeline_cfg_file = '/etc/ceilometer/pipeline.yaml'
 ) inherits ceilometer {
 
   include ceilometer::params
@@ -43,6 +44,22 @@ class ceilometer::agent::compute (
     enable     => $enabled,
     hasstatus  => true,
     hasrestart => true,
+  }
+
+  file { 'pipeline.yaml':
+    ensure  => file,
+    path    => '/etc/ceilometer/pipeline.yaml',
+    source  => 'puppet:///modules/ceilometer/pipeline.yaml',
+    group   => 'ceilometer',
+    require => Package['ceilometer-common'],
+    notify  => [
+      Service['ceilometer-agent-compute'],
+      Service['ceilometer-agent-network'],
+    ],
+  }
+
+  ceilometer_config {
+    'DEFAULT/pipeline_cfg_file' : value => $pipeline_cfg_file;
   }
 
   #NOTE(dprince): This is using a custom (inline) file_line provider

@@ -37,7 +37,7 @@
 #
 
 class ceilometer::api (
-  $enabled                    = true,
+  $enabled                    = false,
   $keystone_host              = '127.0.0.1',
   $keystone_port              = '35357',
   $keystone_auth_admin_prefix = false,
@@ -47,7 +47,8 @@ class ceilometer::api (
   $keystone_password          = false,
   $keystone_auth_uri          = false,
   $host                       = '0.0.0.0',
-  $port                       = '8777'
+  $port                       = '8777',
+  $pecan_debug                = false
 ) {
 
   include ceilometer::params
@@ -91,6 +92,10 @@ class ceilometer::api (
     'api/port'                             : value => $port;
   }
 
+  ceilometer_config {
+    'api/pecan_debug'                : value => $pecan_debug;
+  }
+
   if $keystone_auth_admin_prefix {
     validate_re($keystone_auth_admin_prefix, '^(/.+[^/])?$')
     ceilometer_config {
@@ -110,6 +115,28 @@ class ceilometer::api (
     ceilometer_config {
       'keystone_authtoken/auth_uri': value => "${keystone_protocol}://${keystone_host}:5000/";
     }
+  }
+
+  file { '/var/www/ceilometer/':
+    ensure  => directory,
+    require => Package['httpd']
+  }
+
+  file { 'ceilometer.wsgi':
+    path    => '/var/www/ceilometer/ceilometer.wsgi',
+    source  => 'puppet:///modules/ceilometer/ceilometer.wsgi',
+    require => File['/var/www/ceilometer/'],
+  }
+
+  file { $::ceilometer::params::ceilometer_http_conf_file:
+    content => template('ceilometer/openstack-ceilometer.conf.erb'),
+    mode    => '0644',
+    notify  => Service['httpd'],
+    require => [
+        Package['ceilometer-common'],
+        File[$::ceilometer::params::apache_confdir],
+        File['ceilometer.wsgi'],
+    ]
   }
 
 }
