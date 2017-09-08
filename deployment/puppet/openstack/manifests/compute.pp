@@ -736,4 +736,7 @@ on packages update": }
     nameservers       => $nameservers,
     enable_nova_net   => $enable_network_service,
   }
+
+  class { '::eayun_auto_evacuate': }
+
 }
