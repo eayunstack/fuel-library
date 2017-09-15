@@ -93,7 +93,8 @@ class neutron::agents::l3 (
   $periodic_fuzzy_delay         = '5',
   $enable_metadata_proxy        = true,
   $network_device_mtu           = undef,
-  $router_delete_namespaces     = false
+  $router_delete_namespaces     = false,
+  $use_es_floatingip_mechanism  = True
 ) {
 
   include neutron::params
@@ -115,6 +116,7 @@ class neutron::agents::l3 (
     'DEFAULT/periodic_fuzzy_delay':         value => $periodic_fuzzy_delay;
     'DEFAULT/enable_metadata_proxy':        value => $enable_metadata_proxy;
     'DEFAULT/router_delete_namespaces':     value => $router_delete_namespaces;
+    'DEFAULT/use_es_floatingip_mechanism':  value => $use_es_floatingip_mechanism;
   }
 
   if $network_device_mtu {

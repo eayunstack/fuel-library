@@ -57,9 +57,10 @@ class neutron::agents::metering (
   $manage_service   = true,
   $debug            = false,
   $interface_driver = 'neutron.agent.linux.interface.OVSInterfaceDriver',
+  $driver           = 'neutron.services.metering.drivers.iptables.es_iptables_driver.EsIptablesMeteringDriver',
   $use_namespaces   = true,
   $measure_interval = '30',
-  $report_interval  = '300'
+  $report_interval  = '50'
 ) {
 
   include neutron::params
@@ -76,6 +77,7 @@ class neutron::agents::metering (
     'DEFAULT/use_namespaces':     value => $use_namespaces;
     'DEFAULT/measure_interval':   value => $measure_interval;
     'DEFAULT/report_interval':    value => $report_interval;
+    'DEFAULT/driver':             value => $driver
   }
 
   if $::neutron::params::metering_agent_package {

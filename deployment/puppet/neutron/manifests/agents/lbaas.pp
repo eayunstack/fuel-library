@@ -104,4 +104,16 @@ class neutron::agents::lbaas (
     enable  => $enabled,
     require => Class['neutron'],
   }
+
+  if $::fuel_settings['deployment_mode'] == 'ha_compact' {
+    file { 'replace-ocf-neutron-agent-lbaas':
+      ensure => file,
+      path   => '/usr/lib/ocf/resource.d/eayun/neutron-agent-lbaas',
+      backup => '.bak',
+      mode   => '0755',
+      owner  => 'root',
+      group  => 'root',
+      source => 'puppet:///modules/neutron/neutron-agent-lbaas',
+    }
+  }
 }
