@@ -656,7 +656,13 @@ on packages update": }
 
     if $neutron_settings['L2']['tunnel_id_ranges'] {
       $enable_tunneling = true
-      $tunnel_id_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
+      $tunnel_ranges = split($neutron_settings['L2']['tunnel_id_ranges'], ':')
+      if $tunnel_ranges[1] > 65535 {
+        $tunnel_id_ranges = ["${tunnel_ranges[0]}:65535"]
+      } else {
+        $tunnel_id_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
+      }
+      $vni_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
     } else {
       $enable_tunneling = false
       $tunnel_id_ranges = []
@@ -681,6 +687,21 @@ on packages update": }
     }
   }
 
+  if ($::fuel_settings['quantum_settings']['L2']['segmentation_type'] == 'gre') {
+    $node                 = filter_nodes($::fuel_settings['nodes'], 'uid', $::fuel_settings['uid'])
+    $vxlan_tunnel_address = $node[0]['vxlan_tunnel_address']
+    $local_ip             = $vxlan_tunnel_address
+  }
+  else {
+    $local_ip             = $internal_address
+  }
+
+  if $enable_tunneling {
+    $tunnel_types = ['vxlan', 'gre']
+  }
+  else {
+    $tunnel_types = []
+  }
 
   class { 'openstack::network':
     network_provider  => $network_provider,
@@ -696,11 +717,13 @@ on packages update": }
 
     # ovs
     mechanism_drivers   => $mechanism_drivers,
-    local_ip            => $internal_address,
+    local_ip            => $local_ip,
     bridge_mappings     => $bridge_mappings,
     network_vlan_ranges => $vlan_range,
     enable_tunneling    => $enable_tunneling,
     tunnel_id_ranges    => $tunnel_id_ranges,
+    tunnel_types        => $tunnel_types,
+    vni_ranges          => $vni_ranges,
 
     verbose             => $verbose,
     debug               => $debug,

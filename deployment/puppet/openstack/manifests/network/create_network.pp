@@ -32,10 +32,18 @@ define openstack::network::create_network (
   notify {"${name} ::: tenant ${netdata['tenant']}":}
   notify {"${name} ::: shared ${$netdata['shared']}":}
 
+  # hack for eayunstack to support vxlan network test
+  if $netdata['L2']['network_type'] == 'gre' {
+    $provider_network_type    = 'vxlan'
+  }
+  else {
+    $provider_network_type    = $netdata['L2']['network_type']
+  }
+
   neutron_network { $name:
     ensure                    => present,
     provider_physical_network => $physnet,
-    provider_network_type     => $netdata['L2']['network_type'],
+    provider_network_type     => $provider_network_type,
     provider_segmentation_id  => $segment_id,
     router_external           => $netdata['L2']['router_ext'],
     tenant_name               => $tenant_name,

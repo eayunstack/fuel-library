@@ -191,6 +191,7 @@ class neutron::agents::ml2::ovs (
     if size($tunnel_types) > 0 {
       neutron_plugin_ml2 {
         'agent/tunnel_types': value => join($tunnel_types, ',');
+        'ovs/tunnel_types':   value => join($tunnel_types, ',');
       }
     }
     if 'vxlan' in $tunnel_types {

@@ -31,6 +31,7 @@ class openstack::network::neutron_agents (
   $flat_networks         = ['*'],
   $vxlan_group           = '224.0.0.1',
   $vni_ranges            = ['10:100'],
+  $tunnel_types          = [],
 
   # metadata-agent
   $shared_secret,
@@ -96,6 +97,7 @@ class openstack::network::neutron_agents (
       bridge_mappings     => $bridge_mappings,
       enable_tunneling    => $enable_tunneling,
       local_ip            => $local_ip,
+      tunnel_types        => $tunnel_types,
       manage_service      => true,
       enabled             => true,
     }
