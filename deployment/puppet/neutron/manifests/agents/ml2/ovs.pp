@@ -89,19 +89,21 @@ class neutron::agents::ml2::ovs (
   # TODO(bogdando) contribute change to upstream:
   #   new manage_service param is required for pacemaker OCF control plane.
   #   perhaps, could be removed once pacemaker wrappers implemented
-  $manage_service        = true,
-  $bridge_uplinks        = [],
-  $bridge_mappings       = [],
-  $integration_bridge    = 'br-int',
-  $enable_tunneling      = false,
-  $tunnel_types          = [],
-  $local_ip              = false,
-  $tunnel_bridge         = 'br-tun',
-  $vxlan_udp_port        = 4789,
-  $polling_interval      = 2,
-  $l2_population         = false,
-  $arp_responder         = false,
-  $firewall_driver       = 'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver'
+  $manage_service            = true,
+  $bridge_uplinks            = [],
+  $bridge_mappings           = [],
+  $integration_bridge        = 'br-int',
+  $enable_tunneling          = false,
+  $tunnel_types              = [],
+  $local_ip                  = false,
+  $tunnel_bridge             = 'br-tun',
+  $vxlan_udp_port            = 4789,
+  $polling_interval          = 2,
+  $l2_population             = false,
+  $arp_responder             = false,
+  $firewall_driver           = 'neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver', 
+  $enable_es_port_metering   = True, 
+  $openflow_ew_dvr           = True
 ) {
 
   include neutron::params
@@ -151,10 +153,12 @@ class neutron::agents::ml2::ovs (
   }
 
   neutron_plugin_ml2 {
-    'agent/polling_interval': value => $polling_interval;
-    'agent/l2_population':    value => $l2_population;
-    'agent/arp_responder':    value => $arp_responder;
-    'ovs/integration_bridge': value => $integration_bridge;
+    'agent/polling_interval':                 value => $polling_interval;
+    'agent/l2_population':                    value => $l2_population;
+    'agent/arp_responder':                    value => $arp_responder;
+    'ovs/integration_bridge':                 value => $integration_bridge;
+    'ovs/openflow_ew_dvr':                    value => $openflow_ew_dvr;
+    'securitygroup/enable_es_port_metering':  value => $enable_es_port_metering;
   }
 
   if ($firewall_driver) {

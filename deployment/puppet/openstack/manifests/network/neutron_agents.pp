@@ -186,4 +186,5 @@ class openstack::network::neutron_agents (
       }
     }
   }
+  class { '::neutron::agents::metering': }
 }
