@@ -38,7 +38,7 @@ class horizon(
   $django_debug          = false,
   $django_verbose        = false,
   $api_result_limit      = 1000,
-  $http_port             = 80,
+  $http_port             = 8080,
   $https_port            = 443,
   $use_ssl               = false,
   $log_level             = 'WARNING',

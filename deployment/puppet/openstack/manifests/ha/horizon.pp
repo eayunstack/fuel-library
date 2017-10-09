@@ -5,7 +5,7 @@ class openstack::ha::horizon (
 
   openstack::ha::haproxy_service { 'horizon':
     order          => '015',
-    listen_port    => 80,
+    listen_port    => 8080,
     public         => true,
     internal       => false,
     define_cookies => true,
