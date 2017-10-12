@@ -128,6 +128,12 @@ class openstack::compute (
   $ceilometer                     = false,
   $ceilometer_metering_secret     = 'ceilometer',
   $libvirt_vif_driver             = 'nova.virt.libvirt.vif.LibvirtGenericVIFDriver',
+  $reclaim_instance_interval      = '864000',
+  # Cinder Admin Info
+  $cinder_admin_auth_url          = "http://${::fuel_settings['management_vip']}:35357/v2.0",
+  $cinder_admin_username          = 'cinder',
+  $cinder_admin_password          = $::fuel_settings['cinder']['user_password'],
+  $cinder_admin_tenant_name       = 'services'
 ) {
 
   #
@@ -300,7 +306,7 @@ class openstack::compute (
   }
 
   nova_config {
-    'DEFAULT/cinder_catalog_info': value => 'volume:cinder:internalURL'
+    'cinder/catalog_info': value => 'volumev2:cinderv2:internalURL'
   }
 
   if $use_syslog {
@@ -443,6 +449,15 @@ on packages update": }
 
   # From legacy init.pp
   nova_config { 'DEFAULT/allow_resize_to_same_host':  value => true; }
+
+  nova_config {
+    'cinder/admin_auth_url':              value => "${cinder_admin_auth_url}";
+    'cinder/admin_username':              value => "${cinder_admin_username}";
+    'cinder/admin_password':              value => "${cinder_admin_password}";
+    'cinder/admin_tenant_name':           value => "${cinder_admin_tenant_name}";
+  }
+
+  nova_config { 'DEFAULT/reclaim_instance_interval':  value => "${reclaim_instance_interval}"; }
 
   # Install ssh keys and config file
   install_ssh_keys {'nova_ssh_key_for_migration':

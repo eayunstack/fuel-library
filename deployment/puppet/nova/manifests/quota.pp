@@ -81,7 +81,7 @@ class nova::quota(
   $quota_max_injected_file_path_bytes = 255,
   $quota_security_groups = 10,
   $quota_security_group_rules = 20,
-  $quota_key_pairs = 10,
+  $quota_key_pairs = -1,
   $reservation_expire = 86400,
   $max_age = 0,
   $quota_driver = 'nova.quota.DbQuotaDriver'
