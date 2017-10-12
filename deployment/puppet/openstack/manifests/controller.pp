@@ -705,12 +705,18 @@ class openstack::controller (
 
     if $neutron_settings['L2']['tunnel_id_ranges'] {
       $enable_tunneling = true
-      $tunnel_id_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
+      $tunnel_ranges = split($neutron_settings['L2']['tunnel_id_ranges'], ':')
+      if $tunnel_ranges[1] > 65535 {
+        $tunnel_id_ranges = ["${tunnel_ranges[0]}:65535"]
+      } else {
+        $tunnel_id_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
+      }
       $alt_fallback = split($neutron_settings['L2']['tunnel_id_ranges'], ':')
       Openstack::Network::Create_network {
         tenant_name         => $keystone_admin_tenant,
         fallback_segment_id => $alt_fallback[0]
       }
+      $vni_ranges = [$neutron_settings['L2']['tunnel_id_ranges']]
 
     } else {
       $enable_tunneling = false
@@ -741,6 +747,22 @@ class openstack::controller (
     $neutron_db_uri = undef
   }
 
+  if ($::fuel_settings['quantum_settings']['L2']['segmentation_type'] == 'gre') {
+    $node                 = filter_nodes($::fuel_settings['nodes'], 'uid', $::fuel_settings['uid'])
+    $vxlan_tunnel_address = $node[0]['vxlan_tunnel_address']
+    $local_ip             = $vxlan_tunnel_address
+  }
+  else {
+    $local_ip             = $::internal_address
+  }
+
+  if $enable_tunneling {
+    $tunnel_types = ['vxlan', 'gre']
+  }
+  else {
+    $tunnel_types = []
+  }
+
   Class['openstack::keystone'] ->
   class { 'openstack::network':
     network_provider    => $network_provider,
@@ -763,11 +785,13 @@ class openstack::controller (
 
     #ovs
     mechanism_drivers   => $mechanism_drivers,
-    local_ip            => $::internal_address, # $::internal_adress is this node
+    local_ip            => $local_ip,
     bridge_mappings     => $bridge_mappings,
     network_vlan_ranges => $vlan_range,
     enable_tunneling    => $enable_tunneling,
     tunnel_id_ranges    => $tunnel_id_ranges,
+    tunnel_types        => $tunnel_types,
+    vni_ranges          => $vni_ranges,
 
     #Queue settings
     queue_provider  => $queue_provider,

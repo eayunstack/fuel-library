@@ -33,6 +33,7 @@ class openstack::network (
   $flat_networks         = ['*'],
   $vxlan_group           = '224.0.0.1',
   $vni_ranges            = ['10:10000'],
+  $tunnel_types          = [],
 
   # metadata-agent
   $shared_secret,
@@ -252,6 +253,7 @@ class openstack::network (
           flat_networks         => $flat_networks,
           vxlan_group           => $vxlan_group,
           vni_ranges            => $vni_ranges,
+          tunnel_types          => $tunnel_types,
 
           #metadata-agent
           shared_secret => $shared_secret,
