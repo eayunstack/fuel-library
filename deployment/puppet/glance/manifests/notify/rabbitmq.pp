@@ -51,7 +51,7 @@ class glance::notify::rabbitmq(
   $rabbit_notification_topic    = 'notifications',
   $rabbit_durable_queues        = false,
   $amqp_durable_queues          = false,
-  $ceilometer                   = false,
+  $ceilometer                   = true,
 ) {
 
   if $rabbit_durable_queues {
