@@ -11,6 +11,7 @@ class ceilometer::params {
       # package names
       $agent_central_package_name      = 'openstack-ceilometer-central'
       $agent_compute_package_name      = 'openstack-ceilometer-compute'
+      $agent_network_package_name      = 'openstack-ceilometer-network'
       $api_package_name                = 'openstack-ceilometer-api'
       $collector_package_name          = 'openstack-ceilometer-collector'
       $agent_notification_package_name = 'openstack-ceilometer-notification'
@@ -21,6 +22,7 @@ class ceilometer::params {
       # service names
       $agent_central_service_name      = 'openstack-ceilometer-central'
       $agent_compute_service_name      = 'openstack-ceilometer-compute'
+      $agent_network_service_name      = 'openstack-ceilometer-network'
       $api_service_name                = 'openstack-ceilometer-api'
       $collector_service_name          = 'openstack-ceilometer-collector'
       $agent_notification_service_name = 'openstack-ceilometer-notification'
@@ -28,6 +30,8 @@ class ceilometer::params {
       $alarm_evaluator_service_name    = 'openstack-ceilometer-alarm-evaluator'
       $pymongo_package_name            = 'python-pymongo'
       $psycopg_package_name            = 'python-psycopg2'
+      $ceilometer_http_conf_file       = '/etc/httpd/conf.d/openstack-ceilometer.conf'
+      $apache_confdir                  = ['/etc/httpd', '/etc/httpd/conf.d']
       # db packages
       if $::operatingsystem == 'Fedora' and $::operatingsystemrelease >= 18 {
         # fallback to stdlib version, not provided on fedora

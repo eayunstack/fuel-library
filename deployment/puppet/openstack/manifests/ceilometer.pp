@@ -16,6 +16,7 @@ class openstack::ceilometer (
   $db_user             = 'ceilometer',
   $db_password         = 'ceilometer_pass',
   $db_dbname           = 'ceilometer',
+  $mongodb_port        = '27017',
   $swift_rados_backend = false,
   $mongo_replicaset    = false,
   $amqp_hosts          = '127.0.0.1',
@@ -30,8 +31,8 @@ class openstack::ceilometer (
   $ha_mode             = false,
   $primary_controller  = false,
   $use_neutron         = false,
-  # ttl is 1 week (3600*24*7)
-  $time_to_live        = '604800',
+  # ttl is 2 days (3600*24*2)
+  $time_to_live        = '172800',
 ) {
 
   # Add the base ceilometer class & parameters
@@ -65,7 +66,7 @@ class openstack::ceilometer (
       $current_database_connection = "${db_type}://${db_user}:${db_password}@${db_host}/${db_dbname}?read_timeout=60"
     } else {
       if ( !$mongo_replicaset ) {
-        $current_database_connection = "${db_type}://${db_user}:${db_password}@${db_host}/${db_dbname}"
+        $current_database_connection = "${db_type}://${db_user}:${db_password}@${db_host}:${mongodb_port}/${db_dbname}"
       } else {
         # added for future use with replicaset params
         $current_database_connection = "${db_type}://${db_user}:${db_password}@${db_host}/${db_dbname}"
@@ -106,6 +107,8 @@ class openstack::ceilometer (
     class { '::ceilometer::alarm::notifier': }
 
     class { '::ceilometer::agent::notification': }
+
+    class { '::ceilometer::agent::network': }
 
     if $ha_mode {
       include ceilometer_ha::agent::central
@@ -160,6 +163,9 @@ class openstack::ceilometer (
     class { 'ceilometer::agent::compute':
       enabled => true,
     }
+
+    class { '::ceilometer::agent::network': }
+
     ceilometer_config { 'service_credentials/os_endpoint_type': value => 'internalURL'} ->
     Service<| title == 'ceilometer-agent-compute'|>
   }
