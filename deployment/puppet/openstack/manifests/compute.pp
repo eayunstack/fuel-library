@@ -206,6 +206,13 @@ class openstack::compute (
       }
 
       package {$guestmount_package_name: ensure => present}
+
+      exec { 'enable-stp-on-int-br':                
+        command   => 'ovs-vsctl set bridge br-int stp_enable=true',
+        path      => '/usr/bin',                    
+        provider  => shell,                         
+        onlyif    => 'test `ovs-vsctl get bridge br-int stp_enable` = false',
+      }
     }
     'Debian': {
       augeas { 'default-libvirt':
