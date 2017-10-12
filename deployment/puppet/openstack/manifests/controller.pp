@@ -824,5 +824,6 @@ class openstack::controller (
     nova_admin_password => $nova_user_password,
     nova_url            => "http://${service_endpoint}:8774/v2",
   }
+  class { '::eayun_auto_evacuate': }
 }
 
