@@ -705,7 +705,15 @@ on packages update": }
     } else {
       # by default we use ML2 plugin
       $core_plugin      = 'neutron.plugins.ml2.plugin.Ml2Plugin'
-      $agent            = 'ml2-ovs'
+      $roles            = node_roles($::fuel_settings['nodes'], $::fuel_settings['uid'])
+      # for hyper-converged: there's nothing to do for ovs agent
+      # for compute role deployment when compute and controller
+      # role in the same node.
+      if (! member($roles, 'controller') and ! member($roles, 'primary-controller')){
+        $agent          = 'ml2-ovs'
+      } else {
+        notice('Compute role with primary-controller/controller role in the same node, nothing to do.')
+      }
     }
   }
 
