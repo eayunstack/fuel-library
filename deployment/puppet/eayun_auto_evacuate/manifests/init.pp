@@ -5,6 +5,12 @@ class eayun_auto_evacuate (
   $novaclient_auth_url = "http://${::fuel_settings['management_vip']}:5000/v2.0",
   $deployment_mode     = $::fuel_settings['deployment_mode'],
 ){
+  $roles = node_roles($::fuel_settings['nodes'], $::fuel_settings['uid'])
+  if member($roles, 'controller') or member($roles, 'primary-controller') {
+    $is_controller_node = true
+  } else {
+    $is_controller_node = false
+  }
   $controllers = filter_nodes($nodes, 'role', 'controller')
   if $deployment_mode == 'multinode' {
     $storage_ip1        = $controllers[0]['storage_address']
