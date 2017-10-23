@@ -117,6 +117,11 @@ class ceilometer::api (
     }
   }
 
+  package { 'python-werkzeug':
+    ensure => latest,
+    name   => 'python-werkzeug',
+  }
+
   file { '/var/www/ceilometer/':
     ensure  => directory,
     require => Package['httpd']
@@ -125,7 +130,7 @@ class ceilometer::api (
   file { 'ceilometer.wsgi':
     path    => '/var/www/ceilometer/ceilometer.wsgi',
     source  => 'puppet:///modules/ceilometer/ceilometer.wsgi',
-    require => File['/var/www/ceilometer/'],
+    require => [File['/var/www/ceilometer/'], Package['python-werkzeug']],
   }
 
   file { $::ceilometer::params::ceilometer_http_conf_file:
