@@ -142,6 +142,9 @@ class nova::rabbitmq(
             'set_policy'       => "\'ha-all \".\" {\"ha-mode\":\"all\",\"ha-sync-mode\":\"automatic\"}\'"
           },
           complex_type => 'clone',
+          ms_metadata => {
+            'ordered' => 'true'
+          },
           operations => {
             'monitor' => {
               'interval' => '30',
