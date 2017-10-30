@@ -203,8 +203,8 @@ class nailgun::cobbler(
       file { ['/etc/httpd', '/etc/httpd/conf.d/']:
         ensure => 'directory',
       }
-      file { '/etc/httpd/conf.d/nailgun.conf':
-        content => template('nailgun/httpd_nailgun.conf.erb'),
+      file { '/etc/httpd/conf.d/eayundeploy.conf':
+        content => template('nailgun/httpd_eayundeploy.conf.erb'),
         owner   => 'root',
         group   => 'root',
         mode    => '0644',
