@@ -572,6 +572,7 @@ class osnailyfacter::cluster_simple {
         nova_report_interval           => $::nova_report_interval,
         nova_service_down_time         => $::nova_service_down_time,
         cinder_rate_limits             => $::cinder_rate_limits,
+        cache_server_ip                => [$controller_node_address],
       }
       nova_config { 'DEFAULT/resume_guests_state_on_host_boot': value => $::fuel_settings['resume_guests_state_on_host_boot'] }
       nova_config { 'DEFAULT/use_cow_images': value => $::fuel_settings['use_cow_images'] }
