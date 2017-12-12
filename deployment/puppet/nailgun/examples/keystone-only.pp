@@ -61,6 +61,20 @@ case $production {
       roles  => ['admin'],
     }
 
+    # user for eayuncenter for api call
+    keystone_user { 'eayunadm':
+      ensure          => present,
+      password        => $::fuel_settings['keystone']['nailgun_password'],
+      enabled         => 'True',
+      tenant          => 'admin',
+      manage_password => 'False',
+    }
+
+    keystone_user_role { 'eayunadm@admin':
+      ensure => present,
+      roles  => ['admin'],
+    }
+
     # Keystone Endpoint
     class { 'keystone::endpoint':
       public_address   => $::fuel_settings['ADMIN_NETWORK']['ipaddress'],
